@@ -515,7 +515,7 @@ export const Home = () => {
       <WaveUp fill="#fdf4ff" />
 
       {/* ── NEWSLETTER ── */}
-      <section style={{ background: "#fff0f7" }} className="py-10 sm:py-14">
+      {/* <section style={{ background: "#fff0f7" }} className="py-10 sm:py-14">
         <div className="container mx-auto px-4 lg:px-12 max-w-xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -551,7 +551,7 @@ export const Home = () => {
             </form>
           </motion.div>
         </div>
-      </section>
+      </section> */}
 
     </div>
   );

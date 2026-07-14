@@ -17,11 +17,32 @@ app.use(helmet());
 // Sanitize MongoDB queries — prevents NoSQL injection
 app.use(mongoSanitize());
 
-// CORS
+//CORS
 app.use(cors({
-  origin: [process.env.CLIENT_URL, process.env.ADMIN_URL],
+  origin: function (origin, callback) {
+    const allowed = [
+      process.env.CLIENT_URL,
+      process.env.ADMIN_URL,
+    ].filter(Boolean);
+
+    // Allow requests with no origin (Postman, curl)
+    if (!origin) return callback(null, true);
+
+    if (allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+// Handle preflight requests
+app.options("*", cors());
+
 
 app.use(express.json({ limit: "10kb" })); // limit body size
 app.use(express.urlencoded({ extended: true }));

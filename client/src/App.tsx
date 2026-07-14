@@ -17,8 +17,13 @@ import { Login } from "@/pages/Login";
 import { Register } from "@/pages/Register";
 import { AccountLayout } from "@/pages/account/AccountLayout";
 import { AdminLayout } from "@/pages/admin/AdminLayout";
-import { About }   from "@/pages/About";
+import { About } from "@/pages/About";
 import { Contact } from "@/pages/Contact";
+import { CancellationsAndRefunds } from "@/pages/policies/CancellationsAndRefunds";
+import { ContactUs } from "@/pages/policies/ContactUs";
+import { PrivacyPolicy } from "@/pages/policies/PrivacyPolicy";
+import { ShippingPolicy } from "@/pages/policies/ShippingPolicy";
+import { TermsAndConditions } from "@/pages/policies/TermsAndConditions";
 import { CustomOrderPage } from "@/pages/CustomOrders";
 
 export default function App() {
@@ -49,8 +54,13 @@ export default function App() {
                       <Route path="/register" component={Register} />
                       <Route path="/account" component={AccountLayout} />
                       <Route path="/account/:rest*" component={AccountLayout} />
-                      <Route path="/about"   component={About} />
+                      <Route path="/about" component={About} />
                       <Route path="/contact" component={Contact} />
+                      <Route path="/policies/cancellations-and-refunds" component={CancellationsAndRefunds} />
+                      <Route path="/policies/contact-us" component={ContactUs} />
+                      <Route path="/policies/privacy-policy" component={PrivacyPolicy} />
+                      <Route path="/policies/shipping-policy" component={ShippingPolicy} />
+                      <Route path="/policies/terms-and-conditions" component={TermsAndConditions} />
                       <Route path="/custom" component={CustomOrderPage} />
                       <Route component={() => (
                         <div className="p-20 text-center">
