@@ -68,6 +68,7 @@ app.use("/api/payment",  apiLimiter,  require("./routes/payment.route"));
 app.use("/api/admin",    apiLimiter,  require("./routes/admin.route"));
 app.use("/api/events", require("./routes/event.route"));
 app.use("/api/custom-orders", require("./routes/customOrder.route"));
+app.use("/api/admin/shiprocket", require("./routes/shiprocket.route"));
 
 // Health check
 app.get("/", (req, res) => res.json({ message: "CraftWorld API running ✅" }));
