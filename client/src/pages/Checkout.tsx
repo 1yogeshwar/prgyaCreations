@@ -40,7 +40,7 @@ export const Checkout = () => {
   const { user, token } = useAuth();
   const [, setLocation] = useLocation();
 
-  const shipping = totalPrice > 500 ? 0 : 99;
+  const shipping = totalPrice > 500 ? 0 : 0;
   const tax      = Math.round(totalPrice * 0.08);
   const total    = totalPrice + shipping + tax;
 
