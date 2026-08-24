@@ -237,19 +237,34 @@ export default function Orders() {
     toast.success("Tracking token copied!");
   };
 
-  const shipViaShiprocket = async (orderId) => {
-    setShipping(orderId);
-    try {
-      await axios.post(`${API}/admin/shiprocket/ship/${orderId}`, {}, { headers: authHeader() });
-      toast.success("Shipment created on Shiprocket! 📦");
-      load();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Shipping failed");
-    } finally {
-      setShipping(null);
-    }
-  };
-
+  // const shipViaShiprocket = async (orderId) => {
+  //   setShipping(orderId);
+  //   try {
+  //     await axios.post(`${API}/admin/shiprocket/ship/${orderId}`, {}, { headers: authHeader() });
+  //     toast.success("Shipment created on Shiprocket! 📦");
+  //     load();
+  //   } catch (err) {
+  //     toast.error(err.response?.data?.message || "Shipping failed");
+  //   } finally {
+  //     setShipping(null);
+  //   }
+  // };
+const shipViaShiprocket = async (orderId) => {
+  setShipping(orderId);
+  try {
+    await axios.post(`${API}/admin/shiprocket/ship/${orderId}`, {}, { headers: authHeader() });
+    toast.success("Shipment created on Shiprocket! 📦");
+    load();
+  } catch (err) {
+    // Show detailed error instead of generic message
+    const errorMsg = err.response?.data?.message || "Shipping failed";
+    const details = err.response?.data?.details;
+    console.error("Full error:", details);
+    toast.error(`${errorMsg}${details ? " — check console" : ""}`);
+  } finally {
+    setShipping(null);
+  }
+};
   return (
     <div>
       <h2 style={{ marginBottom: 8 }}>Orders</h2>

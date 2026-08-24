@@ -34,53 +34,37 @@ const createOrder = async (req, res) => {
 
     if (!items || items.length === 0)
       return res.status(400).json({ message: "No items in order" });
-    if (!shippingAddress?.address || !shippingAddress?.city)
-      return res.status(400).json({ message: "Shipping address incomplete" });
-    if (!guestEmail && !req.user)
-      return res.status(400).json({ message: "Email is required" });
 
-    // ✅ Fetch real prices from DB — never trust client prices
     const productIds = items.map(i => i.product);
     const dbProducts = await Product.find({ _id: { $in: productIds } });
 
-    if (dbProducts.length !== productIds.length)
-      return res.status(400).json({ message: "One or more products not found" });
-
-    // Recalculate with real DB prices
     const validatedItems = items.map(item => {
       const dbProduct = dbProducts.find(p => p._id.toString() === item.product);
-      if (!dbProduct)
-        throw new Error(`Product not found: ${item.product}`);
-      if (dbProduct.stock < item.quantity)
-        throw new Error(`Not enough stock for: ${dbProduct.name}`);
+      if (!dbProduct) throw new Error(`Product not found: ${item.product}`);
       return {
-        product:       dbProduct._id,
-        name:          dbProduct.name,
-        image:         dbProduct.images?.[0] || "",
-        price:         dbProduct.price,       // ✅ DB price, not client price
-        quantity:      item.quantity,
-        selectedColor: item.selectedColor || "",
-        selectedSize:  item.selectedSize  || "",
+        product:  dbProduct._id,
+        name:     dbProduct.name,
+        image:    dbProduct.images?.[0] || "",
+        price:    dbProduct.price,
+        quantity: item.quantity,
       };
     });
 
-    // Recalculate totals on server
+    // ✅ Server recalculates EVERYTHING — never trust client numbers
     const subtotal = validatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const shipping  = subtotal > 500 ? 0 : 99;
-    const tax       = Math.round(subtotal * 0.08);
-    const total     = subtotal + shipping + tax;
+    const shipping = subtotal > 500 ? 0 : 99;   // ← your actual current rule
+    const tax      = Math.round(subtotal * 0.08);
+    const total    = subtotal + shipping + tax;
 
-    const paymentStatus =
-      paymentMethod === "online" ? "pending" : "awaiting_confirmation";
+    const paymentStatus = paymentMethod === "online" ? "pending" : "awaiting_confirmation";
 
     const order = await Order.create({
-      user:       req.user?._id || null,
-      isGuest:    !req.user,
-      guestEmail: guestEmail || req.user?.email,
-      phone,
-      items:      validatedItems,
+      user: req.user?._id || null,
+      isGuest: !req.user,
+      guestEmail, phone,
+      items: validatedItems,
       shippingAddress,
-      subtotal, tax, shipping, total,
+      subtotal, tax, shipping, total,   // ← always server-calculated
       paymentMethod, paymentStatus,
     });
 
