@@ -265,6 +265,20 @@ const shipViaShiprocket = async (orderId) => {
     setShipping(null);
   }
 };
+
+ const retryAWB = async (orderId) => {
+  setShipping(orderId);
+  try {
+    await axios.post(`${API}/admin/shiprocket/retry-awb/${orderId}`, {}, { headers: authHeader() });
+    toast.success("Courier assigned successfully! 🚚");
+    load();
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Retry failed");
+    console.error("Retry error details:", err.response?.data?.details);
+  } finally {
+    setShipping(null);
+  }
+};
   return (
     <div>
       <h2 style={{ marginBottom: 8 }}>Orders</h2>
@@ -412,9 +426,78 @@ const shipViaShiprocket = async (orderId) => {
                         </div>
 
                       </div>
-
                       {/* Shiprocket section */}
                       <div style={{ marginTop: 16, ...cardStyle }}>
+                        <p style={cardLabel}>🚚 Shipping via Shiprocket</p>
+
+                        {o.shiprocket?.awbCode ? (
+                          // ✅ State 3: Fully shipped with AWB
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+                            <div>
+                              <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 2 }}>AWB Code</p>
+                              <p style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>{o.shiprocket.awbCode}</p>
+                            </div>
+                            <div>
+                              <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 2 }}>Courier</p>
+                              <p style={{ fontSize: 13, fontWeight: 600 }}>{o.shiprocket.courierName || "—"}</p>
+                            </div>
+                            <div>
+                              <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 2 }}>Status</p>
+                              <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12,
+                                background: "#cffafe", color: "#0e7490" }}>
+                                {o.shiprocket.status || "AWB Assigned"}
+                              </span>
+                            </div>
+                            <a href={o.shiprocket.trackingUrl} target="_blank" rel="noopener noreferrer"
+                              style={{ ...smallBtnStyle, background: "#0891b2", textDecoration: "none", display: "inline-block" }}>
+                              Track Shipment →
+                            </a>
+                          </div>
+                        ) : o.shiprocket?.shipmentId ? (
+                          // ⚠️ State 2: Order created, but courier assignment failed
+                          <div>
+                            <div style={{ padding: "8px 12px", background: "#fef3c7", borderRadius: 8, marginBottom: 10 }}>
+                              <p style={{ fontSize: 13, color: "#92400e" }}>
+                                ⚠️ Shipment order was created but courier assignment failed
+                                (no courier serviceable, or pickup not verified). Try again below.
+                              </p>
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); retryAWB(o._id); }}
+                              disabled={shipping === o._id}
+                              style={{
+                                ...smallBtnStyle,
+                                background: shipping === o._id ? "#94a3b8" : "#f59e0b",
+                                cursor: shipping === o._id ? "not-allowed" : "pointer",
+                                padding: "8px 16px", fontSize: 13,
+                              }}>
+                              {shipping === o._id ? "Retrying..." : "🔄 Retry Courier Assignment"}
+                            </button>
+                          </div>
+                        ) : (
+                          // 🆕 State 1: Nothing shipped yet
+                          <div>
+                            <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 10 }}>
+                              This order hasn't been shipped yet. Click below to create a shipment on Shiprocket
+                              and auto-assign a courier.
+                            </p>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); shipViaShiprocket(o._id); }}
+                              disabled={shipping === o._id}
+                              style={{
+                                ...smallBtnStyle,
+                                background: shipping === o._id ? "#94a3b8" : "#0891b2",
+                                cursor: shipping === o._id ? "not-allowed" : "pointer",
+                                padding: "8px 16px", fontSize: 13,
+                              }}>
+                              {shipping === o._id ? "Creating shipment..." : "📦 Ship via Shiprocket"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Shiprocket section */}
+                      {/* <div style={{ marginTop: 16, ...cardStyle }}>
                         <p style={cardLabel}>🚚 Shipping via Shiprocket</p>
 
                         {o.shiprocket?.awbCode ? (
@@ -458,7 +541,8 @@ const shipViaShiprocket = async (orderId) => {
                             </button>
                           </div>
                         )}
-                      </div>
+                      </div> */}
+                       
 
                       {/* Phone confirm note */}
                       {o.paymentMethod === "phone_confirm" && o.paymentStatus !== "paid" && (

@@ -6,5 +6,6 @@ router.use(protect, adminOnly);
 
 router.post("/ship/:orderId",   shipOrder);
 router.get("/track/:orderId",   trackOrder);
+router.post("/retry-awb/:orderId",    retryAssignAWB);
 
 module.exports = router;
