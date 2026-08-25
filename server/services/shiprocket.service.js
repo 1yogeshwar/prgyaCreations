@@ -26,7 +26,7 @@ const createShipmentOrder = async (order) => {
   const payload = {
     order_id:          order._id.toString(),
     order_date:        new Date(order.createdAt).toISOString().split("T")[0],
-    pickup_location:   "Primary", // must match your Shiprocket pickup address nickname
+    pickup_location:   "Home", // must match your Shiprocket pickup address nickname
     billing_customer_name: order.shippingAddress.firstName,
     billing_last_name:     order.shippingAddress.lastName || "",
     billing_address:       order.shippingAddress.address,

@@ -11,9 +11,9 @@ export const Cart = () => {
   const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
   const [, setLocation] = useLocation();
 
-  const shipping = totalPrice > 50 ? 0 : 5.99;
-  const tax = totalPrice * 0.08;
-  const finalTotal = totalPrice + shipping + tax;
+const shipping = totalPrice;
+const tax = Math.round(totalPrice * 0.08);
+const finalTotal = totalPrice + shipping + tax;
 
   if (items.length === 0) {
     return (
