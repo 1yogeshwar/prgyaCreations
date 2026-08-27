@@ -1,5 +1,6 @@
-const crypto = require("crypto");
-const Order  = require("../models/order.model");
+const crypto  = require("crypto");
+const Order   = require("../models/order.model");
+const Product = require("../models/product.model");
 
 // ✅ Move inside functions — not at top level
 const getRazorpay = () => {
@@ -11,26 +12,6 @@ const getRazorpay = () => {
 };
 
 // POST /api/payment/create-order
-// const createPaymentOrder = async (req, res) => {
-//   try {
-//     const { amount } = req.body;
-//     const razorpay   = getRazorpay(); // ✅ only created when called
-//     const options    = {
-//       amount:   Math.round(amount * 100),
-//       currency: "INR",
-//       receipt:  `receipt_${Date.now()}`,
-//     };
-//     const order = await razorpay.orders.create(options);
-//     res.json({
-//       orderId:  order.id,
-//       amount:   order.amount,
-//       currency: order.currency,
-//       key:      process.env.RAZORPAY_KEY_ID,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 const createPaymentOrder = async (req, res) => {
   try {
     const { items } = req.body;
@@ -46,8 +27,7 @@ const createPaymentOrder = async (req, res) => {
       return sum + dbProduct.price * item.quantity;
     }, 0);
 
-    // const shipping = subtotal > 500 ? 0 : 99;
-    const shipping = subtotal;
+    const shipping = subtotal > 500 ? 0 : 99; // ✅ fixed — was `subtotal`, which doubled the total
     const tax      = Math.round(subtotal * 0.08);
     const total    = subtotal + shipping + tax;
 
@@ -70,7 +50,6 @@ const createPaymentOrder = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // POST /api/payment/verify
 const verifyPayment = async (req, res) => {
