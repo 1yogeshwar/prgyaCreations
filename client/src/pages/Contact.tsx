@@ -49,9 +49,9 @@ export const Contact = () => {
               </h2>
 
               {[
-                { icon: Mail,      label: "Email",     value: "Pragya@Pragyacreation.com",  href: "mailto:Pragya@Pragyacreation.com" },
-                { icon: Phone,     label: "Phone",     value: "+91 98765 43210",             href: "tel:+919876543210" },
-                { icon: MapPin,    label: "Studio",    value: "Nagpur, Maharashtra, India",  href: null },
+                { icon: Mail,      label: "Email",     value: "pragyacreations123@gmail.com",  href: "mailto:Pragyacreations123@gmail.com" },
+                { icon: Phone,     label: "Phone",     value: "+91 82695 11699  ",             href: "tel:+918269511699" },
+                { icon: MapPin,    label: "Studio",    value: "Raipur, Chhattishgarh, India",  href: null },
               ].map(({ icon: Icon, label, value, href }) => (
                 <div key={label} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
                   <div style={{
@@ -76,7 +76,7 @@ export const Contact = () => {
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#9ca3af", marginBottom: 12 }}>Follow along</p>
                 <div style={{ display: "flex", gap: 10 }}>
                   {[
-                    { icon: Instagram,      label: "Instagram", href: "https://instagram.com/Pragyacreation", color: "#e1306c" },
+                    { icon: Instagram,      label: "Instagram", href: "https://www.instagram.com/pragya__creations/", color: "#e1306c" },
                     { icon: MessageCircle,  label: "WhatsApp",  href: "https://wa.me/918269511699",           color: "#25d366" },
                   ].map(({ icon: Icon, label, href, color }) => (
                     <a key={label} href={href} target="_blank" rel="noopener noreferrer"

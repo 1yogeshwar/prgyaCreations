@@ -169,7 +169,7 @@ export const Checkout = () => {
           if (!orderRes.ok) throw new Error(savedOrder.message);
 
           // Step 2 — Verify payment using savedOrder._id directly
-          await fetch(`${API}/payment/verify`, {
+          const verificationRes = await fetch(`${API}/payment/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -179,9 +179,13 @@ export const Checkout = () => {
               orderId:             savedOrder._id, // ✅ from local var, not state
             }),
           });
+          const verification = await verificationRes.json();
+          if (!verificationRes.ok || !verification.success) {
+            throw new Error(verification.message || "Razorpay payment verification failed");
+          }
 
           // Step 3 — Update UI
-          setPlacedOrder(savedOrder);
+          setPlacedOrder({ ...savedOrder, paymentStatus: "paid", paymentId: verification.paymentId });
           clearCart();
           setStep(3);
         } catch (err: any) {

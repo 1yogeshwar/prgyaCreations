@@ -197,6 +197,9 @@ const empty = {
   price: "", originalPrice: "",
   category: "", subcategory: "", stock: "",
   images: "",
+  shipping: {
+    sku: "", weightKg: "", lengthCm: "", breadthCm: "", heightCm: "",
+  },
   isFeatured: false, isBestseller: false, isNew: false, isOnSale: false,
 };
 
@@ -222,13 +225,46 @@ export default function Products() {
     setForm(f => ({ ...f, name, slug }));
   };
 
+  const updateShippingField = (field, value) => {
+    setForm(f => ({ ...f, shipping: { ...f.shipping, [field]: value } }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const measurementFields = ["weightKg", "lengthCm", "breadthCm", "heightCm"];
+    const hasAnyMeasurement = measurementFields.some(field => form.shipping[field] !== "");
+    const hasAllMeasurements = measurementFields.every(field => form.shipping[field] !== "");
+    const hasInvalidMeasurement = measurementFields.some((field) => {
+      const value = form.shipping[field];
+      return value !== "" && (!Number.isFinite(Number(value)) || Number(value) <= 0);
+    });
+
+    if ((!editing || hasAnyMeasurement) && !hasAllMeasurements) {
+      toast.error("Enter weight and all three parcel dimensions, or leave them blank only for a legacy product.");
+      return;
+    }
+    if (hasInvalidMeasurement) {
+      toast.error("Parcel weight and dimensions must be greater than zero.");
+      return;
+    }
+
     try {
+      const shipping = {
+        sku: form.shipping.sku.trim(),
+        ...Object.fromEntries(
+          measurementFields
+            .filter(field => form.shipping[field] !== "")
+            .map(field => [field, Number(form.shipping[field])])
+        ),
+      };
+      if (!shipping.sku) delete shipping.sku;
+
       const payload = {
         ...form,
         images: form.images.split(",").map(i => i.trim()).filter(Boolean),
       };
+      if (Object.keys(shipping).length > 0) payload.shipping = shipping;
+      else delete payload.shipping;
       if (editing) {
         await axios.put(`${API}/admin/products/${editing}`, payload, { headers: authHeader() });
         toast.success("Product updated!");
@@ -259,6 +295,13 @@ export default function Products() {
       subcategory:   p.subcategory || "",
       stock:         p.stock,
       images:        Array.isArray(p.images) ? p.images.join(", ") : "",
+      shipping: {
+        sku:       p.shipping?.sku || "",
+        weightKg:  p.shipping?.weightKg ?? "",
+        lengthCm:  p.shipping?.lengthCm ?? "",
+        breadthCm: p.shipping?.breadthCm ?? "",
+        heightCm:  p.shipping?.heightCm ?? "",
+      },
       isFeatured:    p.isFeatured,
       isBestseller:  p.isBestseller,
       isNew:         p.isNew,
@@ -358,6 +401,47 @@ export default function Products() {
               onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
               style={inputStyle} placeholder="e.g. 10" required />
           </div>
+
+          {/* Shipping parcel details */}
+          <fieldset style={{
+            gridColumn: "span 2", margin: 0, padding: 16, borderRadius: 8,
+            border: "1px solid #ddd", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16,
+          }}>
+            <legend style={{ ...labelStyle, padding: "0 6px" }}>Shipping parcel data</legend>
+            <p style={{ gridColumn: "span 2", margin: 0, color: "#6b7280", fontSize: 12 }}>
+              Used for automatic Shiprocket fulfillment. Measurements are required for new products; legacy products can remain blank until their parcel data is known.
+            </p>
+            <div>
+              <label style={labelStyle}>SKU <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span></label>
+              <input value={form.shipping.sku}
+                onChange={e => updateShippingField("sku", e.target.value)}
+                style={inputStyle} placeholder="e.g. PC-KEYRING-001" maxLength={100} />
+            </div>
+            <div>
+              <label style={labelStyle}>Weight (kg){!editing && " *"}</label>
+              <input type="number" min="0.001" step="0.001" value={form.shipping.weightKg}
+                onChange={e => updateShippingField("weightKg", e.target.value)}
+                style={inputStyle} placeholder="e.g. 0.25" required={!editing} />
+            </div>
+            <div>
+              <label style={labelStyle}>Length (cm){!editing && " *"}</label>
+              <input type="number" min="0.1" step="0.1" value={form.shipping.lengthCm}
+                onChange={e => updateShippingField("lengthCm", e.target.value)}
+                style={inputStyle} placeholder="e.g. 15" required={!editing} />
+            </div>
+            <div>
+              <label style={labelStyle}>Breadth (cm){!editing && " *"}</label>
+              <input type="number" min="0.1" step="0.1" value={form.shipping.breadthCm}
+                onChange={e => updateShippingField("breadthCm", e.target.value)}
+                style={inputStyle} placeholder="e.g. 10" required={!editing} />
+            </div>
+            <div>
+              <label style={labelStyle}>Height (cm){!editing && " *"}</label>
+              <input type="number" min="0.1" step="0.1" value={form.shipping.heightCm}
+                onChange={e => updateShippingField("heightCm", e.target.value)}
+                style={inputStyle} placeholder="e.g. 5" required={!editing} />
+            </div>
+          </fieldset>
 
           {/* Images */}
           <div>

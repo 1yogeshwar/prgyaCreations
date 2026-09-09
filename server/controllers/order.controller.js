@@ -30,7 +30,8 @@ const Product = require("../models/product.model");
 
 const createOrder = async (req, res) => {
   try {
-    const { items, shippingAddress, paymentMethod, guestEmail, phone } = req.body;
+    const { items, shippingAddress, paymentMethod, razorpayOrderId, guestEmail, phone } = req.body;
+    const selectedPaymentMethod = paymentMethod || "online";
 
     if (!items || items.length === 0)
       return res.status(400).json({ message: "No items in order" });
@@ -38,6 +39,8 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Shipping address incomplete" });
     if (!guestEmail && !req.user)
       return res.status(400).json({ message: "Email is required" });
+    if (selectedPaymentMethod === "online" && !String(razorpayOrderId || "").trim())
+      return res.status(400).json({ message: "Razorpay order reference is required for online payment" });
 
     // ✅ Fetch real prices from DB — never trust client prices
     const productIds = items.map(i => i.product);
@@ -71,7 +74,7 @@ const createOrder = async (req, res) => {
     const total     = subtotal + shipping + tax;
 
     const paymentStatus =
-      paymentMethod === "online" ? "pending" : "awaiting_confirmation";
+      selectedPaymentMethod === "online" ? "pending" : "awaiting_confirmation";
 
     const order = await Order.create({
       user:       req.user?._id || null,
@@ -81,7 +84,8 @@ const createOrder = async (req, res) => {
       items:      validatedItems,
       shippingAddress,
       subtotal, tax, shipping, total,
-      paymentMethod, paymentStatus,
+      paymentMethod: selectedPaymentMethod, paymentStatus,
+      razorpayOrderId: selectedPaymentMethod === "online" ? String(razorpayOrderId).trim() : "",
     });
 
     res.status(201).json(order);
