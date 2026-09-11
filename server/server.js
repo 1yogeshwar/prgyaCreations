@@ -44,6 +44,10 @@ app.use(cors({
 app.options("*", cors());
 
 
+// Shiprocket includes a scan history in callbacks, so give its dedicated,
+// token-protected endpoint a bounded larger parser before the general parser.
+app.use("/api/shipping/webhook", express.json({ limit: "100kb" }), require("./routes/shiprocketWebhook.route"));
+
 app.use(express.json({ limit: "10kb" })); // limit body size
 app.use(express.urlencoded({ extended: true }));
 

@@ -197,6 +197,9 @@ const empty = {
   price: "", originalPrice: "",
   category: "", subcategory: "", stock: "",
   images: "",
+  shipping: {
+    sku: "", weightKg: "", lengthCm: "", breadthCm: "", heightCm: "",
+  },
   isFeatured: false, isBestseller: false, isNew: false, isOnSale: false,
 };
 
@@ -222,13 +225,46 @@ export default function Products() {
     setForm(f => ({ ...f, name, slug }));
   };
 
+  const updateShippingField = (field, value) => {
+    setForm(f => ({ ...f, shipping: { ...f.shipping, [field]: value } }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const measurementFields = ["weightKg", "lengthCm", "breadthCm", "heightCm"];
+    const hasAnyMeasurement = measurementFields.some(field => form.shipping[field] !== "");
+    const hasAllMeasurements = measurementFields.every(field => form.shipping[field] !== "");
+    const hasInvalidMeasurement = measurementFields.some((field) => {
+      const value = form.shipping[field];
+      return value !== "" && (!Number.isFinite(Number(value)) || Number(value) <= 0);
+    });
+
+    if ((!editing || hasAnyMeasurement) && !hasAllMeasurements) {
+      toast.error("Enter weight and all three parcel dimensions, or leave them blank only for a legacy product.");
+      return;
+    }
+    if (hasInvalidMeasurement) {
+      toast.error("Parcel weight and dimensions must be greater than zero.");
+      return;
+    }
+
     try {
+      const shipping = {
+        sku: form.shipping.sku.trim(),
+        ...Object.fromEntries(
+          measurementFields
+            .filter(field => form.shipping[field] !== "")
+            .map(field => [field, Number(form.shipping[field])])
+        ),
+      };
+      if (!shipping.sku) delete shipping.sku;
+
       const payload = {
         ...form,
         images: form.images.split(",").map(i => i.trim()).filter(Boolean),
       };
+      if (Object.keys(shipping).length > 0) payload.shipping = shipping;
+      else delete payload.shipping;
       if (editing) {
         await axios.put(`${API}/admin/products/${editing}`, payload, { headers: authHeader() });
         toast.success("Product updated!");
@@ -259,6 +295,13 @@ export default function Products() {
       subcategory:   p.subcategory || "",
       stock:         p.stock,
       images:        Array.isArray(p.images) ? p.images.join(", ") : "",
+      shipping: {
+        sku:       p.shipping?.sku || "",
+        weightKg:  p.shipping?.weightKg ?? "",
+        lengthCm:  p.shipping?.lengthCm ?? "",
+        breadthCm: p.shipping?.breadthCm ?? "",
+        heightCm:  p.shipping?.heightCm ?? "",
+      },
       isFeatured:    p.isFeatured,
       isBestseller:  p.isBestseller,
       isNew:         p.isNew,
@@ -270,37 +313,39 @@ export default function Products() {
   };
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-        <h2>Products</h2>
-        <button onClick={() => { setForm(empty); setEditing(null); setSubcats([]); setShowForm(!showForm); }}
-          style={btnStyle}>
-          {showForm ? "Cancel" : "+ Add Product"}
-        </button>
+    <div className="products-page">
+      <div className="products-page-header" style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
+        <h2 className="products-page-title">Products</h2>
+        <div className="products-page-actions">
+          <button onClick={() => { setForm(empty); setEditing(null); setSubcats([]); setShowForm(!showForm); }}
+            className="products-page-add-button" style={btnStyle}>
+            {showForm ? "Cancel" : "+ Add Product"}
+          </button>
+        </div>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} style={{
+        <form className="products-form" onSubmit={handleSubmit} style={{
           background: "#fff", padding: 24, borderRadius: 12,
           marginBottom: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16,
         }}>
 
           {/* Name — auto generates slug */}
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>Name *</label>
             <input value={form.name} onChange={e => handleNameChange(e.target.value)}
               style={inputStyle} placeholder="Product name" required />
           </div>
 
           {/* Slug — auto filled, editable */}
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>Slug (auto-generated)</label>
             <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
               style={{ ...inputStyle, color: "#6b7280" }} placeholder="auto-generated-slug" />
           </div>
 
           {/* Category dropdown */}
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>Category *</label>
             <select
               value={form.category}
@@ -314,7 +359,7 @@ export default function Products() {
           </div>
 
           {/* Subcategory — dependent on category */}
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>Subcategory</label>
             {subcats.length > 0 ? (
               <select
@@ -337,14 +382,14 @@ export default function Products() {
           </div>
 
           {/* Price fields */}
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>Price (₹) *</label>
             <input type="number" value={form.price}
               onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
               style={inputStyle} placeholder="e.g. 299" required />
           </div>
 
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>Original Price (₹) <span style={{ color: "#9ca3af", fontWeight: 400 }}>(for strike-through)</span></label>
             <input type="number" value={form.originalPrice}
               onChange={e => setForm(f => ({ ...f, originalPrice: e.target.value }))}
@@ -352,15 +397,56 @@ export default function Products() {
           </div>
 
           {/* Stock */}
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>Stock *</label>
             <input type="number" value={form.stock}
               onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
               style={inputStyle} placeholder="e.g. 10" required />
           </div>
 
+          {/* Shipping parcel details */}
+          <fieldset className="products-shipping-fieldset products-form-wide" style={{
+            gridColumn: "span 2", margin: 0, padding: 16, borderRadius: 8,
+            border: "1px solid #ddd", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16,
+          }}>
+            <legend style={{ ...labelStyle, padding: "0 6px" }}>Shipping parcel data</legend>
+            <p className="products-shipping-help" style={{ gridColumn: "span 2", margin: 0, color: "#6b7280", fontSize: 12 }}>
+              Used for automatic Shiprocket fulfillment. Measurements are required for new products; legacy products can remain blank until their parcel data is known.
+            </p>
+            <div className="products-shipping-field">
+              <label style={labelStyle}>SKU <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span></label>
+              <input value={form.shipping.sku}
+                onChange={e => updateShippingField("sku", e.target.value)}
+                style={inputStyle} placeholder="e.g. PC-KEYRING-001" maxLength={100} />
+            </div>
+            <div className="products-shipping-field">
+              <label style={labelStyle}>Weight (kg){!editing && " *"}</label>
+              <input type="number" min="0.001" step="0.001" value={form.shipping.weightKg}
+                onChange={e => updateShippingField("weightKg", e.target.value)}
+                style={inputStyle} placeholder="e.g. 0.25" required={!editing} />
+            </div>
+            <div className="products-shipping-field">
+              <label style={labelStyle}>Length (cm){!editing && " *"}</label>
+              <input type="number" min="0.1" step="0.1" value={form.shipping.lengthCm}
+                onChange={e => updateShippingField("lengthCm", e.target.value)}
+                style={inputStyle} placeholder="e.g. 15" required={!editing} />
+            </div>
+            <div className="products-shipping-field">
+              <label style={labelStyle}>Breadth (cm){!editing && " *"}</label>
+              <input type="number" min="0.1" step="0.1" value={form.shipping.breadthCm}
+                onChange={e => updateShippingField("breadthCm", e.target.value)}
+                style={inputStyle} placeholder="e.g. 10" required={!editing} />
+            </div>
+            <div className="products-shipping-field">
+              <label style={labelStyle}>Height (cm){!editing && " *"}</label>
+              <input type="number" min="0.1" step="0.1" value={form.shipping.heightCm}
+                onChange={e => updateShippingField("heightCm", e.target.value)}
+                style={inputStyle} placeholder="e.g. 5" required={!editing} />
+            </div>
+          </fieldset>
+
           {/* Images */}
-          <div>
+          <div className="products-form-field">
             <label style={labelStyle}>
               Image URLs
               <span style={{ fontWeight: 400, color: "#9ca3af" }}> (comma-separated)</span>
@@ -371,7 +457,7 @@ export default function Products() {
           </div>
 
           {/* Description */}
-          <div style={{ gridColumn: "span 2" }}>
+          <div className="products-form-wide" style={{ gridColumn: "span 2" }}>
             <label style={labelStyle}>Description *</label>
             <textarea value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -379,9 +465,9 @@ export default function Products() {
           </div>
 
           {/* Flags */}
-          <div style={{ gridColumn: "span 2" }}>
+          <div className="products-flags-section products-form-wide" style={{ gridColumn: "span 2" }}>
             <label style={{ ...labelStyle, marginBottom: 10 }}>Product flags</label>
-            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <div className="products-flag-options products-flags" style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[
                 ["isFeatured",   "⭐ Featured"],
                 ["isBestseller", "🏆 Bestseller"],
@@ -408,7 +494,7 @@ export default function Products() {
 
           {/* Preview images */}
           {form.images && (
-            <div style={{ gridColumn: "span 2" }}>
+            <div className="products-image-preview products-form-wide" style={{ gridColumn: "span 2" }}>
               <label style={labelStyle}>Image Preview</label>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {form.images.split(",").map(url => url.trim()).filter(Boolean).map((url, i) => (
@@ -421,7 +507,7 @@ export default function Products() {
             </div>
           )}
 
-          <div style={{ gridColumn: "span 2" }}>
+          <div className="products-form-actions products-form-wide" style={{ gridColumn: "span 2" }}>
             <button type="submit" style={btnStyle}>
               {editing ? "Update Product" : "Create Product"}
             </button>
@@ -436,8 +522,8 @@ export default function Products() {
       )}
 
       {/* Products table */}
-      <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div className="products-table-wrap desktop-only" style={{ background: "#fff", borderRadius: 12, overflow: "hidden" }}>
+        <table className="products-table" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead style={{ background: "#f3f4f6" }}>
             <tr>{["Name","Category","Subcategory","Price","Stock","Flags","Actions"].map(h => (
               <th key={h} style={thStyle}>{h}</th>
@@ -489,6 +575,59 @@ export default function Products() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="products-mobile-list mobile-only" aria-label="Products">
+        {products.map(p => (
+          <article className="product-card" key={p._id}>
+            <div className="product-card-header product-card__top">
+              <div className="product-card-title-group">
+                <h3 className="product-card-title product-card__name">{p.name}</h3>
+                {p.slug && <p className="product-card-slug product-card__slug">{p.slug}</p>}
+              </div>
+              <span className="product-card-stock-badge product-card__stock" style={{
+                padding: "3px 8px", borderRadius: 20, fontSize: 11,
+                background: p.stock > 5 ? "#d1fae5" : p.stock > 0 ? "#fef3c7" : "#fee2e2",
+                color: p.stock > 5 ? "#065f46" : p.stock > 0 ? "#92400e" : "#991b1b",
+                fontWeight: 600,
+              }}>
+                {p.stock > 0 ? `${p.stock} left` : "Out of stock"}
+              </span>
+            </div>
+
+            <div className="product-card-details product-card__price-row">
+              <div className="product-card-price product-card__price">
+                <strong>₹{p.price}</strong>
+                {p.originalPrice && <span className="product-card-original-price product-card__original-price">₹{p.originalPrice}</span>}
+              </div>
+              <div className="product-card-category product-card__meta">
+                <span>{p.category}</span>
+                {p.subcategory && <span className="product-card-subcategory">{p.subcategory}</span>}
+              </div>
+            </div>
+
+            <div className="product-card-flags product-card__flags" aria-label="Product flags">
+              {p.isFeatured && <span style={flagStyle("#7c3aed")} title="Featured" aria-label="Featured">⭐</span>}
+              {p.isBestseller && <span style={flagStyle("#f59e0b")} title="Bestseller" aria-label="Bestseller">🏆</span>}
+              {p.isNew && <span style={flagStyle("#10b981")} title="New arrival" aria-label="New arrival">🆕</span>}
+              {p.isOnSale && <span style={flagStyle("#ef4444")} title="On sale" aria-label="On sale">🔖</span>}
+            </div>
+
+            <div className="product-card-actions product-card__actions">
+              <button type="button" onClick={() => handleEdit(p)} className="product-card-edit-button"
+                style={{ ...smallBtn, background: "#0ea5e9" }}>
+                Edit
+              </button>
+              <button type="button" onClick={() => handleDelete(p._id)} className="product-card-delete-button"
+                style={{ ...smallBtn, background: "#ef4444" }}>
+                Delete
+              </button>
+            </div>
+          </article>
+        ))}
+        {products.length === 0 && (
+          <div className="products-mobile-empty">No products yet — add your first product!</div>
+        )}
       </div>
     </div>
   );

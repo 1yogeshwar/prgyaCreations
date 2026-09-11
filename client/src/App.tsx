@@ -56,24 +56,48 @@ export default function App() {
                       <Route path="/account/:rest*" component={AccountLayout} />
                       <Route path="/about" component={About} />
                       <Route path="/contact" component={Contact} />
-                      <Route path="/policies/cancellations-and-refunds" component={CancellationsAndRefunds} />
-                      <Route path="/policies/contact-us" component={ContactUs} />
-                      <Route path="/policies/privacy-policy" component={PrivacyPolicy} />
-                      <Route path="/policies/shipping-policy" component={ShippingPolicy} />
-                      <Route path="/policies/terms-and-conditions" component={TermsAndConditions} />
+                      <Route
+                        path="/policies/cancellations-and-refunds"
+                        component={CancellationsAndRefunds}
+                      />
+                      <Route
+                        path="/policies/contact-us"
+                        component={ContactUs}
+                      />
+                      <Route
+                        path="/policies/privacy-policy"
+                        component={PrivacyPolicy}
+                      />
+                      <Route
+                        path="/policies/shipping-policy"
+                        component={ShippingPolicy}
+                      />
+                      <Route
+                        path="/policies/terms-and-conditions"
+                        component={TermsAndConditions}
+                      />
                       <Route path="/custom" component={CustomOrderPage} />
-                      <Route component={() => (
-                        <div className="p-20 text-center">
-                          <p className="font-serif text-4xl text-foreground">404</p>
-                          <p className="text-muted-foreground mt-2">Page not found</p>
-                        </div>
-                      )} />
+
+                      {/* 404 Page */}
+                      <Route
+                        component={() => (
+                          <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 text-center">
+                            <img
+                              src="/404-error.gif"
+                              alt="Page not found"
+                              className="w-full max-w-md h-auto"
+                            />
+
+                          </div>
+                        )}
+                      />
                     </Switch>
                   </main>
                   <Footer />
                 </Route>
               </Switch>
             </div>
+
             <Toaster position="bottom-center" />
           </WishlistProvider>
         </CartProvider>
