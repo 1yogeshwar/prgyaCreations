@@ -54,17 +54,17 @@ export default function Events() {
   };
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
+    <div className="admin-page">
+      <div className="page-heading" style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
         <h2>Events & Fairs</h2>
-        <button onClick={() => { setForm(empty); setEditing(null); setShowForm(!showForm); }}
+        <button onClick={() => { setForm(empty); setEditing(null); setShowForm(!showForm); }} className="page-action"
           style={btnStyle}>
           {showForm ? "Cancel" : "+ Add Event"}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} style={{
+        <form className="responsive-form" onSubmit={handleSubmit} style={{
           background: "#fff", padding: 24, borderRadius: 12, marginBottom: 24,
           display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16,
         }}>
@@ -114,7 +114,7 @@ export default function Events() {
         </form>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+      <div className="events-card-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
         {events.map(ev => (
           <div key={ev._id} style={{
             background: "#fff", borderRadius: 12, overflow: "hidden",

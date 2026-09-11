@@ -1,6 +1,6 @@
 
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -203,6 +203,171 @@ const ShiprocketSection = ({ order, isProcessing, localFailure, onShip }) => {
   );
 };
 
+const paymentStatusStyle = (paymentStatus) => ({
+  padding: "4px 10px",
+  borderRadius: 20,
+  fontSize: 12,
+  background: paymentStatus === "paid"
+    ? "#d1fae5"
+    : paymentStatus === "awaiting_confirmation"
+      ? "#fef3c7"
+      : paymentStatus === "failed"
+        ? "#fee2e2"
+        : "#f3f4f6",
+  color: paymentStatus === "paid"
+    ? "#065f46"
+    : paymentStatus === "awaiting_confirmation"
+      ? "#92400e"
+      : paymentStatus === "failed"
+        ? "#991b1b"
+        : "#374151",
+});
+
+const paymentMethodLabel = (method) => {
+  if (method === "cod") return "💵 COD";
+  if (method === "phone_confirm") return "📞 Phone";
+  if (method === "online") return "💳 Online";
+  return "";
+};
+
+const OrderDetails = ({ order, isProcessing, localFailure, onShip, onCopyToken }) => (
+  <>
+    <div className="order-details-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, paddingTop: 16 }}>
+      <div style={cardStyle}>
+        <p style={cardLabel}>📦 Tracking Token</p>
+        <p style={{ fontFamily: "monospace", fontSize: 12, wordBreak: "break-all", color: "#4c1d95", marginBottom: 8 }}>
+          {order.trackingToken || "—"}
+        </p>
+        {order.trackingToken && (
+          <button onClick={() => onCopyToken(order.trackingToken)} style={smallBtnStyle}>
+            Copy Token
+          </button>
+        )}
+      </div>
+
+      <div style={cardStyle}>
+        <p style={cardLabel}>📍 Shipping Address</p>
+        <p style={{ fontSize: 13, lineHeight: 1.6, color: "#374151" }}>
+          {order.shippingAddress?.firstName} {order.shippingAddress?.lastName}<br />
+          {order.shippingAddress?.address}<br />
+          {order.shippingAddress?.city}, {order.shippingAddress?.state} {order.shippingAddress?.zip}
+        </p>
+      </div>
+
+      <div style={cardStyle}>
+        <p style={cardLabel}>🛍 Items ({order.items?.length})</p>
+        {order.items?.map((item, index) => (
+          <div className="order-item-row" key={index} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, marginBottom: 4 }}>
+            <span>{item.name} × {item.quantity}</span>
+            <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>₹{item.price * item.quantity}</span>
+          </div>
+        ))}
+        <div style={{ borderTop: "1px solid #e9d5ff", marginTop: 8, paddingTop: 8, fontSize: 13 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "#6b7280" }}>
+            <span>Subtotal</span><span>₹{order.subtotal}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "#6b7280" }}>
+            <span>Shipping</span><span>{order.shipping === 0 ? "Free" : `₹${order.shipping}`}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "#6b7280" }}>
+            <span>Tax</span><span>₹{order.tax}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, marginTop: 4 }}>
+            <span>Total</span><span>₹{order.total}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ShiprocketSection
+      order={order}
+      isProcessing={isProcessing}
+      localFailure={localFailure}
+      onShip={onShip}
+    />
+
+    {order.paymentMethod === "phone_confirm" && order.paymentStatus !== "paid" && (
+      <div style={{ marginTop: 12, padding: "10px 14px", background: "#fef3c7", borderRadius: 8, fontSize: 13, color: "#92400e" }}>
+        📞 <strong>Action needed:</strong> Call customer at <strong>{order.phone}</strong> to confirm payment. Share tracking token after confirmation.
+      </div>
+    )}
+    {order.paymentMethod === "cod" && (
+      <div style={{ marginTop: 12, padding: "10px 14px", background: "#ecfdf5", borderRadius: 8, fontSize: 13, color: "#065f46" }}>
+        💵 <strong>COD Order:</strong> Collect ₹{order.total} at delivery from {order.shippingAddress?.firstName}.
+      </div>
+    )}
+  </>
+);
+
+const MobileOrderCard = ({ order, expanded, isShipping, localFailure, onToggle, onUpdateStatus, onShip, onCopyToken }) => {
+  const shipment = shipmentDetails(order, localFailure);
+  const paymentLabel = order.paymentStatus === "awaiting_confirmation" ? "awaiting" : order.paymentStatus;
+
+  return (
+    <article className={`order-mobile-card${expanded ? " order-mobile-card--expanded" : ""}`}>
+      <div
+        className="order-mobile-card__summary"
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-controls={`order-details-${order._id}`}
+        onClick={onToggle}
+        onKeyDown={event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onToggle();
+          }
+        }}
+      >
+        <div className="order-mobile-card__top">
+          <span className="order-mobile-card__id">#{order._id.slice(-6).toUpperCase()}</span>
+          <span aria-hidden="true" style={{ color: "#9ca3af", fontSize: 17 }}>{expanded ? "⌃" : "⌄"}</span>
+        </div>
+        <p className="order-mobile-card__customer">{order.user?.name || "Guest"}</p>
+        <p className="order-mobile-card__email">{order.guestEmail || order.user?.email || "—"}</p>
+        <div className="order-mobile-card__amount-row">
+          <span className="order-mobile-card__amount">₹{order.total}</span>
+          <span className="order-mobile-card__payment-method">{paymentMethodLabel(order.paymentMethod)}</span>
+        </div>
+        <div className="order-mobile-card__status-row">
+          <span style={paymentStatusStyle(order.paymentStatus)}>{paymentLabel}</span>
+          <span style={{ padding: "4px 10px", borderRadius: 20, fontSize: 12, background: "#e0e7ff", color: "#3730a3" }}>
+            {order.orderStatus}
+          </span>
+          {shipment.hasShipment && (
+            <span style={{ padding: "4px 10px", borderRadius: 20, fontSize: 12, background: "#cffafe", color: "#0e7490" }}>
+              {shipment.status}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="order-mobile-card__select-row" onClick={event => event.stopPropagation()}>
+        <label htmlFor={`order-status-${order._id}`}>Update status</label>
+        <select
+          id={`order-status-${order._id}`}
+          value={order.orderStatus}
+          onChange={event => onUpdateStatus(order._id, event.target.value)}
+        >
+          {STATUS.map(status => <option key={status} value={status}>{status}</option>)}
+        </select>
+      </div>
+
+      {expanded && (
+        <div id={`order-details-${order._id}`} className="order-mobile-card__details">
+          <OrderDetails
+            order={order}
+            isProcessing={isShipping}
+            localFailure={localFailure}
+            onShip={onShip}
+            onCopyToken={onCopyToken}
+          />
+        </div>
+      )}
+    </article>
+  );
+};
+
 export default function Orders() {
   const [orders, setOrders]     = useState([]);
   const [expanded, setExpanded] = useState(null);
@@ -269,186 +434,111 @@ export default function Orders() {
   };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: 8 }}>Orders</h2>
-      <p style={{ color: "#6b7280", fontSize: 13, marginBottom: 24 }}>
+    <div className="admin-page orders-page">
+      <h2 className="admin-page-title" style={{ marginBottom: 8 }}>Orders</h2>
+      <p className="orders-page-intro" style={{ color: "#6b7280", fontSize: 13, marginBottom: 24 }}>
         Click any row to expand full details including tracking token.
       </p>
 
-      <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+      <div className="desktop-only orders-table-wrap" style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead style={{ background: "#f3f4f6" }}>
             <tr>
-              {["Order ID", "Customer", "Phone", "Total", "Payment", "Order Status", "Update Status"].map(h => (
-                <th key={h} style={thStyle}>{h}</th>
+              {["Order ID", "Customer", "Phone", "Total", "Payment", "Order Status", "Update Status"].map(header => (
+                <th key={header} style={thStyle}>{header}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {orders.map(o => (
-              <>
-                {/* Main Row */}
+            {orders.map(order => (
+              <Fragment key={order._id}>
                 <tr
-                  key={o._id}
-                  onClick={() => setExpanded(expanded === o._id ? null : o._id)}
+                  onClick={() => setExpanded(expanded === order._id ? null : order._id)}
                   style={{
                     borderBottom: "1px solid #f3f4f6",
                     cursor: "pointer",
-                    background: expanded === o._id ? "#faf5ff" : "white",
+                    background: expanded === order._id ? "#faf5ff" : "white",
                     transition: "background 0.15s",
                   }}
                 >
                   <td style={tdStyle}>
                     <span style={{ fontFamily: "monospace", fontWeight: 600 }}>
-                      #{o._id.slice(-6).toUpperCase()}
+                      #{order._id.slice(-6).toUpperCase()}
                     </span>
-                    {shipmentDetails(o, shippingErrors[o._id]).awbCode && (
+                    {shipmentDetails(order, shippingErrors[order._id]).awbCode && (
                       <div style={{ fontSize: 10, color: "#0891b2", marginTop: 2 }}>📦 Shipped</div>
                     )}
                   </td>
-
                   <td style={tdStyle}>
-                    <div style={{ fontWeight: 500 }}>{o.user?.name || "Guest"}</div>
-                    <div style={{ fontSize: 12, color: "#6b7280" }}>{o.guestEmail || o.user?.email || "—"}</div>
+                    <div style={{ fontWeight: 500 }}>{order.user?.name || "Guest"}</div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>{order.guestEmail || order.user?.email || "—"}</div>
                   </td>
-
                   <td style={tdStyle}>
-                    <span style={{ fontFamily: "monospace", fontSize: 13 }}>
-                      {o.phone || "—"}
+                    <span style={{ fontFamily: "monospace", fontSize: 13 }}>{order.phone || "—"}</span>
+                  </td>
+                  <td style={tdStyle}>
+                    <strong>₹{order.total}</strong>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>{paymentMethodLabel(order.paymentMethod)}</div>
+                  </td>
+                  <td style={tdStyle}>
+                    <span style={paymentStatusStyle(order.paymentStatus)}>
+                      {order.paymentStatus === "awaiting_confirmation" ? "awaiting" : order.paymentStatus}
                     </span>
                   </td>
-
-                  <td style={tdStyle}>
-                    <strong>₹{o.total}</strong>
-                    <div style={{ fontSize: 11, color: "#6b7280" }}>
-                      {o.paymentMethod === "cod"           && "💵 COD"}
-                      {o.paymentMethod === "phone_confirm" && "📞 Phone"}
-                      {o.paymentMethod === "online"        && "💳 Online"}
-                    </div>
-                  </td>
-
-                  <td style={tdStyle}>
-                    <span style={{
-                      padding: "4px 10px", borderRadius: 20, fontSize: 12,
-                      background: o.paymentStatus === "paid"                  ? "#d1fae5"
-                                : o.paymentStatus === "awaiting_confirmation" ? "#fef3c7"
-                                : o.paymentStatus === "failed"                ? "#fee2e2"
-                                : "#f3f4f6",
-                      color:     o.paymentStatus === "paid"                  ? "#065f46"
-                                : o.paymentStatus === "awaiting_confirmation" ? "#92400e"
-                                : o.paymentStatus === "failed"                ? "#991b1b"
-                                : "#374151",
-                    }}>
-                      {o.paymentStatus === "awaiting_confirmation" ? "awaiting" : o.paymentStatus}
-                    </span>
-                  </td>
-
                   <td style={tdStyle}>
                     <span style={{ padding: "4px 10px", borderRadius: 20, fontSize: 12, background: "#e0e7ff", color: "#3730a3" }}>
-                      {o.orderStatus}
+                      {order.orderStatus}
                     </span>
                   </td>
-
-                  <td style={tdStyle} onClick={e => e.stopPropagation()}>
+                  <td style={tdStyle} onClick={event => event.stopPropagation()}>
                     <select
-                      value={o.orderStatus}
-                      onChange={e => updateStatus(o._id, e.target.value)}
+                      value={order.orderStatus}
+                      onChange={event => updateStatus(order._id, event.target.value)}
                       style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #ddd", fontSize: 13 }}
                     >
-                      {STATUS.map(s => <option key={s} value={s}>{s}</option>)}
+                      {STATUS.map(status => <option key={status} value={status}>{status}</option>)}
                     </select>
                   </td>
                 </tr>
-
-                {/* Expanded Detail Row */}
-                {expanded === o._id && (
-                  <tr key={`${o._id}-expanded`}>
+                {expanded === order._id && (
+                  <tr>
                     <td colSpan={7} style={{ background: "#faf5ff", padding: "0 16px 16px 16px", borderBottom: "2px solid #e9d5ff" }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, paddingTop: 16 }}>
-
-                        {/* Tracking Token */}
-                        <div style={cardStyle}>
-                          <p style={cardLabel}>📦 Tracking Token</p>
-                          <p style={{ fontFamily: "monospace", fontSize: 12, wordBreak: "break-all", color: "#4c1d95", marginBottom: 8 }}>
-                            {o.trackingToken || "—"}
-                          </p>
-                          {o.trackingToken && (
-                            <button onClick={() => copyToken(o.trackingToken)} style={smallBtnStyle}>
-                              Copy Token
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Shipping Address */}
-                        <div style={cardStyle}>
-                          <p style={cardLabel}>📍 Shipping Address</p>
-                          <p style={{ fontSize: 13, lineHeight: 1.6, color: "#374151" }}>
-                            {o.shippingAddress?.firstName} {o.shippingAddress?.lastName}<br />
-                            {o.shippingAddress?.address}<br />
-                            {o.shippingAddress?.city}, {o.shippingAddress?.state} {o.shippingAddress?.zip}
-                          </p>
-                        </div>
-
-                        {/* Order Items */}
-                        <div style={cardStyle}>
-                          <p style={cardLabel}>🛍 Items ({o.items?.length})</p>
-                          {o.items?.map((item, i) => (
-                            <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-                              <span>{item.name} × {item.quantity}</span>
-                              <span style={{ fontWeight: 600 }}>₹{item.price * item.quantity}</span>
-                            </div>
-                          ))}
-                          <div style={{ borderTop: "1px solid #e9d5ff", marginTop: 8, paddingTop: 8, fontSize: 13 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#6b7280" }}>
-                              <span>Subtotal</span><span>₹{o.subtotal}</span>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#6b7280" }}>
-                              <span>Shipping</span><span>{o.shipping === 0 ? "Free" : `₹${o.shipping}`}</span>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#6b7280" }}>
-                              <span>Tax</span><span>₹{o.tax}</span>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, marginTop: 4 }}>
-                              <span>Total</span><span>₹{o.total}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Shiprocket section */}
-                      <ShiprocketSection
-                        order={o}
-                        isProcessing={shipping === o._id}
-                        localFailure={shippingErrors[o._id]}
+                      <OrderDetails
+                        order={order}
+                        isProcessing={shipping === order._id}
+                        localFailure={shippingErrors[order._id]}
                         onShip={shipViaShiprocket}
+                        onCopyToken={copyToken}
                       />
-
-                      {/* Phone confirm note */}
-                      {o.paymentMethod === "phone_confirm" && o.paymentStatus !== "paid" && (
-                        <div style={{ marginTop: 12, padding: "10px 14px", background: "#fef3c7", borderRadius: 8, fontSize: 13, color: "#92400e" }}>
-                          📞 <strong>Action needed:</strong> Call customer at <strong>{o.phone}</strong> to confirm payment. Share tracking token after confirmation.
-                        </div>
-                      )}
-                      {o.paymentMethod === "cod" && (
-                        <div style={{ marginTop: 12, padding: "10px 14px", background: "#ecfdf5", borderRadius: 8, fontSize: 13, color: "#065f46" }}>
-                          💵 <strong>COD Order:</strong> Collect ₹{o.total} at delivery from {o.shippingAddress?.firstName}.
-                        </div>
-                      )}
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ padding: 32, textAlign: "center", color: "#9ca3af" }}>
-                  No orders yet
-                </td>
+                <td colSpan={7} style={{ padding: 32, textAlign: "center", color: "#9ca3af" }}>No orders yet</td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mobile-only orders-mobile-list" aria-label="Orders">
+        {orders.map(order => (
+          <MobileOrderCard
+            key={order._id}
+            order={order}
+            expanded={expanded === order._id}
+            isShipping={shipping === order._id}
+            localFailure={shippingErrors[order._id]}
+            onToggle={() => setExpanded(expanded === order._id ? null : order._id)}
+            onUpdateStatus={updateStatus}
+            onShip={shipViaShiprocket}
+            onCopyToken={copyToken}
+          />
+        ))}
+        {orders.length === 0 && <p className="users-mobile-empty">No orders yet</p>}
       </div>
     </div>
   );

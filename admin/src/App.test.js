@@ -1,8 +1,11 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { render, screen } from "@testing-library/react";
+import App from "./App";
 
-test('renders learn react link', () => {
+test("routes unauthenticated visitors to the admin login", () => {
+  window.localStorage.clear();
+
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+
+  expect(screen.getByRole("heading", { name: /admin login/i })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /^login$/i })).toBeInTheDocument();
 });

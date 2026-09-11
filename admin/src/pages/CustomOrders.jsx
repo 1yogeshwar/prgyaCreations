@@ -46,7 +46,7 @@ export default function CustomOrders() {
   };
 
   return (
-    <div>
+    <div className="admin-page">
       <h2 style={{ marginBottom: 8 }}>Custom Orders</h2>
       <p style={{ color: "#6b7280", fontSize: 13, marginBottom: 24 }}>
         Review customer custom requests, set a price and update status.
@@ -61,6 +61,8 @@ export default function CustomOrders() {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {orders.map(o => {
           const sc = statusColors[o.status] || statusColors.pending;
+          const isExpanded = expanded === o._id;
+          const toggleExpanded = () => setExpanded(isExpanded ? null : o._id);
           return (
             <div key={o._id} style={{
               background: "#fff", borderRadius: 12,
@@ -68,13 +70,22 @@ export default function CustomOrders() {
               overflow: "hidden",
             }}>
               {/* Row */}
-              <div onClick={() => setExpanded(expanded === o._id ? null : o._id)}
+              <div className="custom-order-row" role="button" tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-controls={`custom-order-details-${o._id}`}
+                onClick={toggleExpanded}
+                onKeyDown={event => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    toggleExpanded();
+                  }
+                }}
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr 120px 140px 40px",
                   alignItems: "center", gap: 16,
                   padding: "16px 20px", cursor: "pointer",
-                  background: expanded === o._id ? "#faf5ff" : "#fff",
+                  background: isExpanded ? "#faf5ff" : "#fff",
                 }}>
 
                 <div>
@@ -108,14 +119,14 @@ export default function CustomOrders() {
                 </span>
 
                 <span style={{ fontSize: 18, color: "#9ca3af" }}>
-                  {expanded === o._id ? "▲" : "▼"}
+                  {isExpanded ? "▲" : "▼"}
                 </span>
               </div>
 
               {/* Expanded */}
-              {expanded === o._id && (
-                <div style={{ padding: "0 20px 20px", borderTop: "1px solid #f3f4f6" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+              {isExpanded && (
+                <div id={`custom-order-details-${o._id}`} className="custom-order-expanded" style={{ padding: "0 20px 20px", borderTop: "1px solid #f3f4f6" }}>
+                  <div className="custom-order-details-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
 
                     {/* Full request details */}
                     <div style={{ background: "#faf5ff", borderRadius: 10, padding: 16 }}>

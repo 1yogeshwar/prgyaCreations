@@ -12,9 +12,9 @@ export default function Users() {
   }, []);
 
   return (
-    <div>
-      <h2 style={{ marginBottom: 24 }}>Users</h2>
-      <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden" }}>
+    <div className="admin-page users-page">
+      <h2 className="admin-page-title" style={{ marginBottom: 24 }}>Users</h2>
+      <div className="desktop-only users-table-wrapper" style={{ background: "#fff", borderRadius: 12, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead style={{ background: "#f3f4f6" }}>
             <tr>{["Name","Email","Phone","Joined"].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
@@ -31,6 +31,29 @@ export default function Users() {
             {users.length === 0 && <tr><td colSpan={4} style={{ padding: 24, textAlign: "center", color: "#9ca3af" }}>No users yet</td></tr>}
           </tbody>
         </table>
+      </div>
+
+      <div className="mobile-only users-mobile-list">
+        {users.map(u => (
+          <article className="user-mobile-card" key={u._id}>
+            <h3 className="user-mobile-name">{u.name}</h3>
+            <dl className="user-mobile-details">
+              <div className="user-mobile-detail">
+                <dt>Email</dt>
+                <dd>{u.email}</dd>
+              </div>
+              <div className="user-mobile-detail">
+                <dt>Phone</dt>
+                <dd>{u.phone || "—"}</dd>
+              </div>
+              <div className="user-mobile-detail">
+                <dt>Joined</dt>
+                <dd>{new Date(u.createdAt).toLocaleDateString()}</dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+        {users.length === 0 && <p className="users-mobile-empty">No users yet</p>}
       </div>
     </div>
   );
