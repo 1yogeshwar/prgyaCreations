@@ -14,9 +14,6 @@ const app = express();
 // Security headers
 app.use(helmet());
 
-// Sanitize MongoDB queries — prevents NoSQL injection
-app.use(mongoSanitize());
-
 //CORS
 app.use(cors({
   origin: function (origin, callback) {
@@ -50,7 +47,8 @@ app.use("/api/shipping/webhook", express.json({ limit: "100kb" }), require("./ro
 
 app.use(express.json({ limit: "10kb" })); // limit body size
 app.use(express.urlencoded({ extended: true }));
-
+// Sanitize MongoDB queries — prevents NoSQL injection
+app.use(mongoSanitize());
 // Rate limiting on auth routes — max 20 requests per 15 min
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

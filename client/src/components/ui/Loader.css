@@ -1,51 +1,69 @@
-.loader {
-  display: inline-flex;
-  gap: 5px;
+.loader-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
-.loader::before,
-.loader::after {
-  content: "";
-  width: 35px;
-  aspect-ratio: 1;
-  box-shadow: 0 0 0 3px inset #fff;
-  animation: 2s infinite linear;
-  animation-name: l3-1, l3-2;
-  animation-delay: -1s, 0s;
+.heart {
+  width: 220px;
+  height: auto;
+  overflow: visible;
 }
 
-.loader::after {
-  --s: -1;
+.heart-line {
+  fill: none;
+  stroke: #c85c73;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: heartDash 3s linear infinite;
 }
 
-@keyframes l3-1 {
+.heart-point {
+  fill: none;
+  stroke: #e58ca0;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 0.0001, 0.9999;
+  stroke-dashoffset: 1;
+  animation: heartDash 3s linear infinite;
+}
+
+.loader-text {
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #7a4a55;
+  font-weight: 500;
+  animation: loaderTextPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes heartDash {
   0% {
-    border-radius: 50% 0 0 50%;
+    stroke-dashoffset: 1;
   }
 
-  25% {
-    border-radius: 50% 50% 0 0;
+  80% {
+    stroke-dashoffset: 0;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes loaderTextPulse {
+  0%,
+  100% {
+    opacity: 0.45;
   }
 
   50% {
-    border-radius: 0 50% 50% 0;
-  }
-
-  75% {
-    border-radius: 0 0 50% 50%;
-  }
-
-  100% {
-    border-radius: 50% 0 0 50%;
-  }
-}
-
-@keyframes l3-2 {
-  0% {
-    transform: scaleX(var(--s, 1)) rotate(0deg);
-  }
-
-  100% {
-    transform: scaleX(var(--s, 1)) rotate(-360deg);
+    opacity: 1;
   }
 }

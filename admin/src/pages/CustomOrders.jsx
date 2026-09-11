@@ -1,213 +1,620 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import Loader from "../components/Loader";
+import "./CustomOrders.css";
 
 const API = process.env.REACT_APP_API_URL;
-const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem("admin-token")}` });
 
-const STATUS = ["pending","reviewing","quoted","confirmed","in_progress","completed","cancelled"];
+const authHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
+});
 
-const statusColors = {
-  pending:     { bg: "#fef3c7", color: "#92400e" },
-  reviewing:   { bg: "#dbeafe", color: "#1e40af" },
-  quoted:      { bg: "#ede9fe", color: "#5b21b6" },
-  confirmed:   { bg: "#d1fae5", color: "#065f46" },
-  in_progress: { bg: "#fce7f3", color: "#9d174d" },
-  completed:   { bg: "#d1fae5", color: "#065f46" },
-  cancelled:   { bg: "#fee2e2", color: "#991b1b" },
+const STATUS = [
+  "pending",
+  "reviewing",
+  "quoted",
+  "confirmed",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
+
+const statusClasses = {
+  pending: "custom-status--pending",
+  reviewing: "custom-status--reviewing",
+  quoted: "custom-status--quoted",
+  confirmed: "custom-status--confirmed",
+  in_progress: "custom-status--in-progress",
+  completed: "custom-status--completed",
+  cancelled: "custom-status--cancelled",
 };
 
 export default function CustomOrders() {
-  const [orders, setOrders]     = useState([]);
+  const [orders, setOrders] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [quoteForm, setQuoteForm] = useState({});
 
-  const load = () =>
-    axios.get(`${API}/custom-orders`, { headers: authHeader() })
-      .then(r => setOrders(r.data));
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  // ==========================================
+  // LOAD CUSTOM ORDERS
+  // ==========================================
 
-  const handleUpdate = async (id) => {
+  const load = async ({ showLoader = false } = {}) => {
     try {
-      await axios.put(`${API}/custom-orders/${id}`, quoteForm[id], { headers: authHeader() });
-      toast.success("Updated!");
-      load();
-    } catch {
-      toast.error("Update failed");
+      if (showLoader) {
+        setLoading(true);
+      }
+
+      const response = await axios.get(
+        `${API}/custom-orders`,
+        {
+          headers: authHeader(),
+        }
+      );
+
+      setOrders(response.data);
+    } catch (error) {
+      console.error("Custom orders load error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Unable to load custom orders"
+      );
+    } finally {
+      if (showLoader) {
+        setLoading(false);
+      }
     }
   };
 
+  useEffect(() => {
+    load({ showLoader: true });
+  }, []);
+
+  // ==========================================
+  // UPDATE ORDER
+  // ==========================================
+
+  const handleUpdate = async (id) => {
+    if (updatingId) {
+      return;
+    }
+
+    const changes = quoteForm[id];
+
+    if (!changes || Object.keys(changes).length === 0) {
+      toast.error("Make a change before updating.");
+      return;
+    }
+
+    try {
+      setUpdatingId(id);
+
+      await axios.put(
+        `${API}/custom-orders/${id}`,
+        changes,
+        {
+          headers: authHeader(),
+        }
+      );
+
+      toast.success("Custom order updated!");
+
+      // Remove stale local form values for this order
+      setQuoteForm((current) => {
+        const {
+          [id]: ignored,
+          ...remaining
+        } = current;
+
+        return remaining;
+      });
+
+      // Silent refresh
+      await load();
+    } catch (error) {
+      console.error("Custom order update error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Update failed"
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  // ==========================================
+  // FORM FIELD
+  // ==========================================
+
   const setField = (id, field, value) => {
-    setQuoteForm(prev => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value }
+    setQuoteForm((current) => ({
+      ...current,
+
+      [id]: {
+        ...current[id],
+        [field]: value,
+      },
     }));
   };
 
+  // ==========================================
+  // EXPAND / COLLAPSE
+  // ==========================================
+
+  const toggleOrder = (id) => {
+    setExpanded((current) =>
+      current === id ? null : id
+    );
+  };
+
   return (
-    <div className="admin-page">
-      <h2 style={{ marginBottom: 8 }}>Custom Orders</h2>
-      <p style={{ color: "#6b7280", fontSize: 13, marginBottom: 24 }}>
-        Review customer custom requests, set a price and update status.
-      </p>
+    <div className="admin-page custom-orders-page">
+      {/* =====================================
+          HEADER
+          ===================================== */}
 
-      {orders.length === 0 && (
-        <div style={{ textAlign: "center", padding: 60, color: "#9ca3af" }}>
-          No custom orders yet 🎨
+      <div className="custom-orders-header">
+        <div>
+          <h2 className="admin-page-title">
+            Custom Orders
+          </h2>
+
+          <p className="custom-orders-intro">
+            Review customer custom requests, set a
+            price and update status.
+          </p>
         </div>
-      )}
+      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {orders.map(o => {
-          const sc = statusColors[o.status] || statusColors.pending;
-          const isExpanded = expanded === o._id;
-          const toggleExpanded = () => setExpanded(isExpanded ? null : o._id);
-          return (
-            <div key={o._id} style={{
-              background: "#fff", borderRadius: 12,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              overflow: "hidden",
-            }}>
-              {/* Row */}
-              <div className="custom-order-row" role="button" tabIndex={0}
-                aria-expanded={isExpanded}
-                aria-controls={`custom-order-details-${o._id}`}
-                onClick={toggleExpanded}
-                onKeyDown={event => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    toggleExpanded();
-                  }
-                }}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 120px 140px 40px",
-                  alignItems: "center", gap: 16,
-                  padding: "16px 20px", cursor: "pointer",
-                  background: isExpanded ? "#faf5ff" : "#fff",
-                }}>
+      {/* =====================================
+          INITIAL LOADING
+          ===================================== */}
 
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{o.name}</p>
-                  <p style={{ fontSize: 12, color: "#6b7280" }}>{o.email}</p>
-                  <p style={{ fontSize: 12, color: "#6b7280" }}>{o.phone}</p>
-                </div>
+      {loading ? (
+        <Loader
+          type="table"
+          columns={4}
+          rows={6}
+        />
+      ) : (
+        <>
+          {/* =================================
+              EMPTY STATE
+              ================================= */}
 
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 2 }}>
-                    {o.productReference || o.category || "General custom"}
-                  </p>
-                  <p style={{ fontSize: 12, color: "#6b7280" }}>
-                    {o.description?.slice(0, 60)}...
-                  </p>
-                </div>
+          {orders.length === 0 && (
+            <div className="custom-orders-empty">
+              <span className="custom-orders-empty__icon">
+                🎨
+              </span>
 
-                <div>
-                  {o.quotedPrice
-                    ? <p style={{ fontWeight: 700, color: "#7c3aed", fontSize: 15 }}>₹{o.quotedPrice}</p>
-                    : <p style={{ fontSize: 12, color: "#9ca3af" }}>Not quoted</p>
-                  }
-                </div>
+              <p>No custom orders yet</p>
+            </div>
+          )}
 
-                <span style={{
-                  padding: "5px 12px", borderRadius: 20, fontSize: 12,
-                  fontWeight: 600, background: sc.bg, color: sc.color,
-                  textTransform: "capitalize", display: "inline-block",
-                }}>
-                  {o.status.replace("_", " ")}
-                </span>
+          {/* =================================
+              ORDERS LIST
+              ================================= */}
 
-                <span style={{ fontSize: 18, color: "#9ca3af" }}>
-                  {isExpanded ? "▲" : "▼"}
-                </span>
-              </div>
+          <div className="custom-orders-list">
+            {orders.map((order) => {
+              const isExpanded =
+                expanded === order._id;
 
-              {/* Expanded */}
-              {isExpanded && (
-                <div id={`custom-order-details-${o._id}`} className="custom-order-expanded" style={{ padding: "0 20px 20px", borderTop: "1px solid #f3f4f6" }}>
-                  <div className="custom-order-details-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+              const isUpdating =
+                updatingId === order._id;
 
-                    {/* Full request details */}
-                    <div style={{ background: "#faf5ff", borderRadius: 10, padding: 16 }}>
-                      <p style={cardLabel}>📋 Request Details</p>
-                      <p style={detailText}><strong>Category:</strong> {o.category || "—"}</p>
-                      <p style={detailText}><strong>Product ref:</strong> {o.productReference || "—"}</p>
-                      <p style={detailText}><strong>Description:</strong> {o.description}</p>
-                      {o.parameters?.size      && <p style={detailText}><strong>Size:</strong> {o.parameters.size}</p>}
-                      {o.parameters?.color     && <p style={detailText}><strong>Color:</strong> {o.parameters.color}</p>}
-                      {o.parameters?.name      && <p style={detailText}><strong>Name/Text:</strong> {o.parameters.name}</p>}
-                      {o.parameters?.quantity  && <p style={detailText}><strong>Quantity:</strong> {o.parameters.quantity}</p>}
-                      {o.parameters?.extraNotes && <p style={detailText}><strong>Extra notes:</strong> {o.parameters.extraNotes}</p>}
-                      {o.referenceImage && (
-                        <div style={{ marginTop: 8 }}>
-                          <p style={detailText}><strong>Reference image:</strong></p>
-                          <img src={o.referenceImage} alt="reference"
-                            style={{ width: "100%", borderRadius: 8, marginTop: 4, maxHeight: 160, objectFit: "cover" }}/>
-                        </div>
-                      )}
-                      <p style={{ ...detailText, color: "#9ca3af", marginTop: 8 }}>
-                        Received: {new Date(o.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              const statusClass =
+                statusClasses[order.status] ||
+                statusClasses.pending;
+
+              return (
+                <article
+                  key={order._id}
+                  className={`custom-order-card ${
+                    isExpanded
+                      ? "custom-order-card--expanded"
+                      : ""
+                  }`}
+                >
+                  {/* =========================
+                      ORDER SUMMARY
+                      ========================= */}
+
+                  <div
+                    className="custom-order-row"
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    aria-controls={`custom-order-details-${order._id}`}
+                    onClick={() =>
+                      toggleOrder(order._id)
+                    }
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "Enter" ||
+                        event.key === " "
+                      ) {
+                        event.preventDefault();
+
+                        toggleOrder(order._id);
+                      }
+                    }}
+                  >
+                    {/* CUSTOMER */}
+
+                    <div className="custom-order-customer">
+                      <p className="custom-order-customer__name">
+                        {order.name}
+                      </p>
+
+                      <p className="custom-order-muted">
+                        {order.email}
+                      </p>
+
+                      <p className="custom-order-muted">
+                        {order.phone}
                       </p>
                     </div>
 
-                    {/* Admin action */}
-                    <div style={{ background: "#fff", borderRadius: 10, padding: 16, border: "1px solid #e9d5ff" }}>
-                      <p style={cardLabel}>⚙️ Admin Action</p>
+                    {/* REQUEST */}
 
-                      <div style={{ marginBottom: 12 }}>
-                        <label style={labelStyle}>Update Status</label>
-                        <select
-                          defaultValue={o.status}
-                          onChange={e => setField(o._id, "status", e.target.value)}
-                          style={inputStyle}>
-                          {STATUS.map(s => (
-                            <option key={s} value={s}>{s.replace("_", " ")}</option>
-                          ))}
-                        </select>
-                      </div>
+                    <div className="custom-order-request">
+                      <p className="custom-order-request__title">
+                        {order.productReference ||
+                          order.category ||
+                          "General custom"}
+                      </p>
 
-                      <div style={{ marginBottom: 12 }}>
-                        <label style={labelStyle}>Quoted Price (₹)</label>
-                        <input type="number"
-                          defaultValue={o.quotedPrice}
-                          placeholder="e.g. 499"
-                          onChange={e => setField(o._id, "quotedPrice", Number(e.target.value))}
-                          style={inputStyle}/>
-                      </div>
+                      <p className="custom-order-muted">
+                        {order.description?.length > 60
+                          ? `${order.description.slice(
+                              0,
+                              60
+                            )}...`
+                          : order.description || "—"}
+                      </p>
+                    </div>
 
-                      <div style={{ marginBottom: 16 }}>
-                        <label style={labelStyle}>Message to Customer</label>
-                        <textarea
-                          defaultValue={o.adminNote}
-                          placeholder="e.g. Hi! Your custom keyring will cost ₹499 and take 5 days..."
-                          onChange={e => setField(o._id, "adminNote", e.target.value)}
-                          style={{ ...inputStyle, height: 80 }}/>
-                      </div>
+                    {/* PRICE */}
 
-                      <button onClick={() => handleUpdate(o._id)} style={btnStyle}>
-                        Save & Update
-                      </button>
-
-                      {o.adminNote && (
-                        <div style={{ marginTop: 12, padding: 10, background: "#f0fdf4", borderRadius: 8, fontSize: 13, color: "#166534" }}>
-                          <strong>Last message sent:</strong><br/>{o.adminNote}
-                        </div>
+                    <div className="custom-order-price">
+                      {order.quotedPrice ? (
+                        <p className="custom-order-price__value">
+                          ₹{order.quotedPrice}
+                        </p>
+                      ) : (
+                        <p className="custom-order-price__empty">
+                          Not quoted
+                        </p>
                       )}
                     </div>
+
+                    {/* STATUS */}
+
+                    <div>
+                      <span
+                        className={`custom-status ${statusClass}`}
+                      >
+                        {(order.status || "pending").replace(
+                          /_/g,
+                          " "
+                        )}
+                      </span>
+                    </div>
+
+                    {/* ARROW */}
+
+                    <span
+                      className={`custom-order-arrow ${
+                        isExpanded
+                          ? "custom-order-arrow--expanded"
+                          : ""
+                      }`}
+                      aria-hidden="true"
+                    >
+                      ▼
+                    </span>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+
+                  {/* =========================
+                      EXPANDED CONTENT
+                      ========================= */}
+
+                  {isExpanded && (
+                    <div
+                      id={`custom-order-details-${order._id}`}
+                      className="custom-order-expanded"
+                    >
+                      <div className="custom-order-details-grid">
+                        {/* =====================
+                            REQUEST DETAILS
+                            ===================== */}
+
+                        <section className="custom-order-detail-card">
+                          <p className="custom-order-card-label">
+                            📋 Request Details
+                          </p>
+
+                          <p className="custom-order-detail-text">
+                            <strong>Category:</strong>{" "}
+                            {order.category || "—"}
+                          </p>
+
+                          <p className="custom-order-detail-text">
+                            <strong>Product ref:</strong>{" "}
+                            {order.productReference || "—"}
+                          </p>
+
+                          <p className="custom-order-detail-text">
+                            <strong>Description:</strong>{" "}
+                            {order.description || "—"}
+                          </p>
+
+                          {order.parameters?.size && (
+                            <p className="custom-order-detail-text">
+                              <strong>Size:</strong>{" "}
+                              {order.parameters.size}
+                            </p>
+                          )}
+
+                          {order.parameters?.color && (
+                            <p className="custom-order-detail-text">
+                              <strong>Color:</strong>{" "}
+                              {order.parameters.color}
+                            </p>
+                          )}
+
+                          {order.parameters?.name && (
+                            <p className="custom-order-detail-text">
+                              <strong>Name/Text:</strong>{" "}
+                              {order.parameters.name}
+                            </p>
+                          )}
+
+                          {order.parameters?.quantity && (
+                            <p className="custom-order-detail-text">
+                              <strong>Quantity:</strong>{" "}
+                              {order.parameters.quantity}
+                            </p>
+                          )}
+
+                          {order.parameters?.extraNotes && (
+                            <p className="custom-order-detail-text">
+                              <strong>Extra notes:</strong>{" "}
+                              {
+                                order.parameters
+                                  .extraNotes
+                              }
+                            </p>
+                          )}
+
+                          {/* REFERENCE IMAGE */}
+
+                          {order.referenceImage && (
+                            <div className="custom-order-reference">
+                              <p className="custom-order-detail-text">
+                                <strong>
+                                  Reference image:
+                                </strong>
+                              </p>
+
+                              <img
+                                src={order.referenceImage}
+                                alt="Customer reference"
+                                className="custom-order-reference__image"
+                              />
+                            </div>
+                          )}
+
+                          {/* RECEIVED DATE */}
+
+                          <p className="custom-order-received">
+                            Received:{" "}
+                            {new Date(
+                              order.createdAt
+                            ).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )}
+                          </p>
+                        </section>
+
+                        {/* =====================
+                            ADMIN ACTION
+                            ===================== */}
+
+                        <section className="custom-order-admin-card">
+                          <p className="custom-order-card-label">
+                            ⚙️ Admin Action
+                          </p>
+
+                          {/* STATUS */}
+
+                          <div className="custom-order-field">
+                            <label
+                              htmlFor={`custom-status-${order._id}`}
+                            >
+                              Update Status
+                            </label>
+
+                            <select
+                              id={`custom-status-${order._id}`}
+                              value={
+                                quoteForm[order._id]
+                                  ?.status ??
+                                order.status
+                              }
+                              disabled={isUpdating}
+                              onChange={(event) =>
+                                setField(
+                                  order._id,
+                                  "status",
+                                  event.target.value
+                                )
+                              }
+                            >
+                              {STATUS.map((status) => (
+                                <option
+                                  key={status}
+                                  value={status}
+                                >
+                                  {status.replace(
+                                    /_/g,
+                                    " "
+                                  )}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* PRICE */}
+
+                          <div className="custom-order-field">
+                            <label
+                              htmlFor={`custom-price-${order._id}`}
+                            >
+                              Quoted Price (₹)
+                            </label>
+
+                            <input
+                              id={`custom-price-${order._id}`}
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={
+                                quoteForm[order._id]
+                                  ?.quotedPrice ??
+                                order.quotedPrice ??
+                                ""
+                              }
+                              placeholder="e.g. 499"
+                              disabled={isUpdating}
+                              onChange={(event) =>
+                                setField(
+                                  order._id,
+                                  "quotedPrice",
+                                  event.target.value === ""
+                                    ? ""
+                                    : Number(
+                                        event.target.value
+                                      )
+                                )
+                              }
+                            />
+                          </div>
+
+                          {/* MESSAGE */}
+
+                          <div className="custom-order-field">
+                            <label
+                              htmlFor={`custom-note-${order._id}`}
+                            >
+                              Message to Customer
+                            </label>
+
+                            <textarea
+                              id={`custom-note-${order._id}`}
+                              value={
+                                quoteForm[order._id]
+                                  ?.adminNote ??
+                                order.adminNote ??
+                                ""
+                              }
+                              placeholder="e.g. Hi! Your custom keyring will cost ₹499 and take 5 days..."
+                              disabled={isUpdating}
+                              onChange={(event) =>
+                                setField(
+                                  order._id,
+                                  "adminNote",
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </div>
+
+                          {/* =====================
+                              PURPLE ACTION BUTTON
+                              ===================== */}
+
+                          <button
+                            type="button"
+                            disabled={
+                              isUpdating ||
+                              (updatingId !== null &&
+                                !isUpdating)
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+
+                              handleUpdate(order._id);
+                            }}
+                            className="custom-order-action-btn"
+                          >
+                            <span className="custom-order-action-btn__fold" />
+
+                            <span className="custom-order-action-btn__inner">
+                              {isUpdating ? (
+                                <>
+                                  <Loader type="button" />
+
+                                  <span>
+                                    Updating...
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="custom-order-action-btn__icon">
+                                    ⚡
+                                  </span>
+
+                                  <span>
+                                    Save & Update
+                                  </span>
+                                </>
+                              )}
+                            </span>
+
+                            <span className="custom-order-action-btn__points">
+                              <span className="custom-order-action-btn__point custom-order-action-btn__point--1" />
+                              <span className="custom-order-action-btn__point custom-order-action-btn__point--2" />
+                              <span className="custom-order-action-btn__point custom-order-action-btn__point--3" />
+                              <span className="custom-order-action-btn__point custom-order-action-btn__point--4" />
+                            </span>
+                          </button>
+
+                          {/* LAST MESSAGE */}
+
+                          {order.adminNote && (
+                            <div className="custom-order-last-message">
+                              <strong>
+                                Last message sent:
+                              </strong>
+
+                              <p>
+                                {order.adminNote}
+                              </p>
+                            </div>
+                          )}
+                        </section>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-const cardLabel  = { fontSize: 11, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 };
-const detailText = { fontSize: 13, color: "#374151", marginBottom: 4, lineHeight: 1.5 };
-const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 };
-const inputStyle = { width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, boxSizing: "border-box", marginBottom: 0 };
-const btnStyle   = { width: "100%", padding: "10px 0", background: "#7c3aed", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 600 };
