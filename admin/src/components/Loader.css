@@ -1,0 +1,433 @@
+/* =========================================
+   PRAGYA CREATIONS - REUSABLE LOADERS
+   ========================================= */
+
+
+/* =========================================
+   HEART LOADER
+   Dashboard Initial Fetch
+   ========================================= */
+
+.loader-wrapper {
+  width: 100%;
+  min-height: 300px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+}
+
+.heart-loader {
+  width: 220px;
+  max-width: 80%;
+  height: auto;
+
+  overflow: visible;
+}
+
+.heart-loader-line {
+  fill: none;
+
+  stroke: #7c3aed;
+  stroke-width: 1.5;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+
+  animation: adminHeartDash 2.5s linear infinite;
+}
+
+.heart-loader-point {
+  fill: none;
+
+  stroke: #a78bfa;
+  stroke-width: 5;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  stroke-dasharray: 0.0001, 0.9999;
+  stroke-dashoffset: 1;
+
+  animation: adminHeartDash 2.5s linear infinite;
+}
+
+.loader-label {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+
+  text-transform: uppercase;
+
+  color: #6b7280;
+
+  font-weight: 600;
+
+  animation: loaderLabelPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes adminHeartDash {
+  0% {
+    stroke-dashoffset: 1;
+  }
+
+  80%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes loaderLabelPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* =========================================
+   TABLE SKELETON LOADER
+   Products / Orders / Users
+   ========================================= */
+
+.table-loader-wrapper {
+  width: 100%;
+
+  padding: 14px;
+
+  background: #ffffff;
+
+  border-radius: 12px;
+
+  overflow: hidden;
+}
+
+.table-loader-head,
+.table-loader-row {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      var(--loader-columns),
+      minmax(100px, 1fr)
+    );
+
+  gap: 14px;
+}
+
+.table-loader-head {
+  padding: 14px 12px;
+
+  margin-bottom: 12px;
+
+  background: #f3f4f6;
+
+  border-radius: 8px;
+}
+
+.table-loader-head-cell {
+  width: 75%;
+  height: 14px;
+
+  border-radius: 20px;
+
+  background: #e5e7eb;
+}
+
+.table-loader-body {
+  width: 100%;
+}
+
+.table-loader-row {
+  padding: 16px 12px;
+
+  margin-bottom: 10px;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 1px 5px rgba(0, 0, 0, 0.07);
+}
+
+.table-loader-cell {
+  min-width: 0;
+}
+
+.table-loader-shimmer {
+  width: 85%;
+  height: 14px;
+
+  border-radius: 20px;
+
+  background: linear-gradient(
+    90deg,
+    #eeeeee 0%,
+    #dddddd 40%,
+    #eeeeee 80%
+  );
+
+  background-size: 200% 100%;
+
+  animation:
+    tableLoaderShimmer 1.4s linear infinite;
+}
+
+.table-loader-row:nth-child(2n)
+.table-loader-shimmer {
+  width: 70%;
+}
+
+.table-loader-row:nth-child(3n)
+.table-loader-shimmer {
+  width: 90%;
+}
+
+@keyframes tableLoaderShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+/* =========================================
+   BUTTON SPINNER
+   Create / Update / Delete / Actions
+   ========================================= */
+
+.button-loader-spinner {
+  width: 17px;
+  height: 17px;
+
+  display: inline-block;
+
+  flex-shrink: 0;
+
+  border: 2px solid
+    rgba(255, 255, 255, 0.35);
+
+  border-top-color: #ffffff;
+
+  border-radius: 50%;
+
+  animation:
+    buttonLoaderSpin 0.7s linear infinite;
+}
+
+@keyframes buttonLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================
+   AUTH / LOGIN FULL SCREEN LOADER
+   From Uiverse.io by narmesh_sah
+   ========================================= */
+
+.auth-loader-screen {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 9999;
+
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1f2937 0%,
+      #312e81 50%,
+      #581c87 100%
+    );
+}
+
+.auth-preloader {
+  position: relative;
+
+  width: 180px;
+  height: 180px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  filter:
+    drop-shadow(
+      0 0 5px rgba(255, 255, 255, 0.35)
+    );
+}
+
+.auth-crack {
+  position: absolute;
+
+  width: 38px;
+
+  aspect-ratio: 1;
+
+  background-color: #fef3fc;
+
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+
+  animation:
+    authLoaderRotate 6s linear infinite;
+}
+
+.auth-crack2 {
+  width: 48px;
+
+  opacity: 0.9;
+
+  animation-delay: 1s;
+}
+
+.auth-crack3 {
+  width: 58px;
+
+  opacity: 0.75;
+
+  animation-delay: 1.5s;
+}
+
+.auth-crack4 {
+  width: 68px;
+
+  opacity: 0.55;
+
+  animation-delay: 2s;
+}
+
+.auth-crack5 {
+  width: 78px;
+
+  opacity: 0.35;
+
+  animation-delay: 2.5s;
+}
+
+.auth-loader-label {
+  color: #ffffff;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  letter-spacing: 2px;
+
+  text-transform: uppercase;
+
+  animation:
+    authLabelPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes authLoaderRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes authLabelPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 768px) {
+  .loader-wrapper {
+    min-height: 220px;
+  }
+
+  .heart-loader {
+    width: 180px;
+  }
+
+  .table-loader-wrapper {
+    padding: 10px;
+  }
+
+  .table-loader-head {
+    display: none;
+  }
+
+  .table-loader-row {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+
+    padding: 16px;
+  }
+
+  .table-loader-shimmer {
+    height: 13px;
+  }
+
+  .auth-preloader {
+    width: 140px;
+    height: 140px;
+  }
+}
+
+
+/* =========================================
+   ACCESSIBILITY
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-loader-line,
+  .heart-loader-point,
+  .loader-label,
+  .table-loader-shimmer,
+  .button-loader-spinner,
+  .auth-crack,
+  .auth-loader-label {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+}

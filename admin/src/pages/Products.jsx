@@ -1,161 +1,34 @@
-// import { useEffect, useState } from "react";
-// import axios from "axios";
-// import { toast } from "sonner";
-
-// const API = process.env.REACT_APP_API_URL;
-// const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem("admin-token")}` });
-
-// const empty = { name: "", slug: "", description: "", price: "", originalPrice: "", category: "", subcategory: "", stock: "", images: "", isFeatured: false, isBestseller: false, isNew: false, isOnSale: false };
-
-// export default function Products() {
-//   const [products, setProducts] = useState([]);
-//   const [form, setForm] = useState(empty);
-//   const [editing, setEditing] = useState(null);
-//   const [showForm, setShowForm] = useState(false);
-
-//   const load = () => axios.get(`${API}/products`).then(r => setProducts(r.data));
-//   useEffect(() => { load(); }, []);
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       const payload = {
-//         ...form,
-//         images: form.images
-//           .split(",")
-//           .map((image) => image.trim())
-//           .filter(Boolean),
-//       };
-//       if (editing) {
-//         await axios.put(`${API}/admin/products/${editing}`, payload, { headers: authHeader() });
-//         toast.success("Product updated!");
-//       } else {
-//         await axios.post(`${API}/admin/products`, payload, { headers: authHeader() });
-//         toast.success("Product created!");
-//       }
-//       setForm(empty); setEditing(null); setShowForm(false); load();
-//     } catch (err) {
-//       toast.error(err.response?.data?.message || "Error saving product");
-//     }
-//   };
-
-//   const handleDelete = async (id) => {
-//     if (!window.confirm("Delete this product?")) return;
-//     await axios.delete(`${API}/admin/products/${id}`, { headers: authHeader() });
-//     toast.success("Deleted!"); load();
-//   };
-
-//   const handleEdit = (p) => {
-//     setForm({
-//       name: p.name,
-//       slug: p.slug,
-//       description: p.description,
-//       price: p.price,
-//       originalPrice: p.originalPrice || "",
-//       category: p.category,
-//       subcategory: p.subcategory || "",
-//       stock: p.stock,
-//       images: Array.isArray(p.images) ? p.images.join(", ") : "",
-//       isFeatured: p.isFeatured,
-//       isBestseller: p.isBestseller,
-//       isNew: p.isNew,
-//       isOnSale: p.isOnSale,
-//     });
-//     setEditing(p._id); setShowForm(true);
-//   };
-
-//   return (
-//     <div>
-//       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-//         <h2>Products</h2>
-//         <button onClick={() => { setForm(empty); setEditing(null); setShowForm(!showForm); }} style={btnStyle}>
-//           {showForm ? "Cancel" : "+ Add Product"}
-//         </button>
-//       </div>
-
-//       {showForm && (
-//         <form onSubmit={handleSubmit} style={{ background: "#fff", padding: 24, borderRadius: 12, marginBottom: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-//           {[["name","Name"],["slug","Slug"],["price","Price"],["originalPrice","Original Price"],["category","Category"],["subcategory","Subcategory"],["stock","Stock"],["images","Images (comma-separated URLs)"]].map(([key, label]) => (
-//             <div key={key}>
-//               <label style={labelStyle}>{label}</label>
-//               <input value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
-//                 style={inputStyle} placeholder={label} required={["name","price","category"].includes(key)} />
-//             </div>
-//           ))}
-//           <div style={{ gridColumn: "span 2" }}>
-//             <label style={labelStyle}>Description</label>
-//             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-//               style={{ ...inputStyle, height: 80 }} required />
-//           </div>
-//           <div style={{ gridColumn: "span 2", display: "flex", gap: 24 }}>
-//             {["isFeatured","isBestseller","isNew","isOnSale"].map(key => (
-//               <label key={key} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-//                 <input type="checkbox" checked={form[key]} onChange={e => setForm({ ...form, [key]: e.target.checked })} />
-//                 {key.replace("is", "Is ")}
-//               </label>
-//             ))}
-//           </div>
-//           <div style={{ gridColumn: "span 2" }}>
-//             <button type="submit" style={btnStyle}>{editing ? "Update Product" : "Create Product"}</button>
-//           </div>
-//         </form>
-//       )}
-
-//       <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden" }}>
-//         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-//           <thead style={{ background: "#f3f4f6" }}>
-//             <tr>{["Name","Category","Price","Stock","Actions"].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
-//           </thead>
-//           <tbody>
-//             {products.map(p => (
-//               <tr key={p._id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-//                 <td style={tdStyle}>{p.name}</td>
-//                 <td style={tdStyle}>{p.category}</td>
-//                 <td style={tdStyle}>₹{p.price}</td>
-//                 <td style={tdStyle}>{p.stock}</td>
-//                 <td style={tdStyle}>
-//                   <button onClick={() => handleEdit(p)} style={{ ...smallBtn, background: "#0ea5e9" }}>Edit</button>
-//                   <button onClick={() => handleDelete(p._id)} style={{ ...smallBtn, background: "#ef4444" }}>Delete</button>
-//                 </td>
-//               </tr>
-//             ))}
-//             {products.length === 0 && <tr><td colSpan={5} style={{ padding: 24, textAlign: "center", color: "#9ca3af" }}>No products yet</td></tr>}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }
-
-// const inputStyle = { width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ddd", fontSize: 14, boxSizing: "border-box" };
-// const labelStyle = { display: "block", marginBottom: 4, fontSize: 13, color: "#374151", fontWeight: 600 };
-// const btnStyle = { padding: "10px 20px", background: "#7c3aed", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14 };
-// const smallBtn = { padding: "6px 12px", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, marginRight: 6 };
-// const thStyle = { padding: "12px 16px", textAlign: "left", fontSize: 13, fontWeight: 600, color: "#374151" };
-// const tdStyle = { padding: "12px 16px", fontSize: 14, color: "#374151" };
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import Loader from "../components/Loader";
 
 const API = process.env.REACT_APP_API_URL;
-const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem("admin-token")}` });
 
-// ── Master category + subcategory data ──
+const authHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
+});
+
+// ─────────────────────────────────────────────
+// Category + subcategory data
+// ─────────────────────────────────────────────
+
 const CATEGORIES = {
-  "Keyring": [
+  Keyring: [
     "Resin Keyring",
     "Pipe Cleaner Keyring",
     "Dream Catcher Keyring",
     "Embroidery Crochet Keyring",
   ],
-  "Frames": [
+
+  Frames: [
     "Resin Frame",
     "String Art Frame",
     "Embroidery Hoop Frame",
     "Glass Frame",
   ],
-  "Jewellery": [
+
+  Jewellery: [
     "Beads Bracelet",
     "Evil Eye Bracelet",
     "Charms Anklet",
@@ -164,7 +37,8 @@ const CATEGORIES = {
     "Shrink Jewellery",
     "Jute Brooch",
   ],
-  "Crochet": [
+
+  Crochet: [
     "Gajra",
     "Daisy Flower Keyring",
     "Peacock Feather Keyring",
@@ -172,11 +46,16 @@ const CATEGORIES = {
     "Evil Eye Keyring",
     "Other Crochet",
   ],
+
   "Engagement Ring Platter": [],
+
   "Pipe Cleaner Flower Bouquet": [],
+
   "Fridge Magnet": [],
+
   "Embroidery Hair Clip": [],
-  "Resin": [
+
+  Resin: [
     "Rose Preservation Earrings",
     "Resin Ring",
     "Heart Shape Pendant",
@@ -192,328 +71,1293 @@ const CATEGORIES = {
   ],
 };
 
+// ─────────────────────────────────────────────
+// Empty form
+// ─────────────────────────────────────────────
+
 const empty = {
-  name: "", slug: "", description: "",
-  price: "", originalPrice: "",
-  category: "", subcategory: "", stock: "",
+  name: "",
+  slug: "",
+  description: "",
+
+  price: "",
+  originalPrice: "",
+
+  category: "",
+  subcategory: "",
+
+  stock: "",
+
   images: "",
+
   shipping: {
-    sku: "", weightKg: "", lengthCm: "", breadthCm: "", heightCm: "",
+    sku: "",
+    weightKg: "",
+    lengthCm: "",
+    breadthCm: "",
+    heightCm: "",
   },
-  isFeatured: false, isBestseller: false, isNew: false, isOnSale: false,
+
+  isFeatured: false,
+  isBestseller: false,
+  isNew: false,
+  isOnSale: false,
 };
 
 export default function Products() {
-  const [products, setProducts]   = useState([]);
-  const [form, setForm]           = useState(empty);
-  const [editing, setEditing]     = useState(null);
-  const [showForm, setShowForm]   = useState(false);
-  const [subcats, setSubcats]     = useState([]);
+  // ─────────────────────────────────────────
+  // Main state
+  // ─────────────────────────────────────────
 
-  const load = () => axios.get(`${API}/products`).then(r => setProducts(r.data));
-  useEffect(() => { load(); }, []);
+  const [products, setProducts] = useState([]);
 
-  // Update subcategory list when category changes
-  const handleCategoryChange = (cat) => {
-    setForm(f => ({ ...f, category: cat, subcategory: "" }));
-    setSubcats(CATEGORIES[cat] || []);
+  const [form, setForm] = useState(empty);
+
+  const [editing, setEditing] = useState(null);
+
+  const [showForm, setShowForm] = useState(false);
+
+  const [subcats, setSubcats] = useState([]);
+
+  // ─────────────────────────────────────────
+  // Loading states
+  // ─────────────────────────────────────────
+
+  // Full table shimmer - initial fetch only
+  const [loading, setLoading] = useState(true);
+
+  // Create / Update
+  const [saving, setSaving] = useState(false);
+
+  // Delete specific product
+  const [deletingId, setDeletingId] = useState(null);
+
+  // ─────────────────────────────────────────
+  // Products loading
+  // ─────────────────────────────────────────
+
+  const load = async ({ showLoader = false } = {}) => {
+    try {
+      if (showLoader) {
+        setLoading(true);
+      }
+
+      const response = await axios.get(`${API}/products`);
+
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Products load error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Unable to load products"
+      );
+    } finally {
+      if (showLoader) {
+        setLoading(false);
+      }
+    }
   };
 
-  // Auto-generate slug from name
+  useEffect(() => {
+    load({ showLoader: true });
+  }, []);
+
+  // ─────────────────────────────────────────
+  // Category change
+  // ─────────────────────────────────────────
+
+  const handleCategoryChange = (category) => {
+    setForm((current) => ({
+      ...current,
+      category,
+      subcategory: "",
+    }));
+
+    setSubcats(CATEGORIES[category] || []);
+  };
+
+  // ─────────────────────────────────────────
+  // Auto slug
+  // ─────────────────────────────────────────
+
   const handleNameChange = (name) => {
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    setForm(f => ({ ...f, name, slug }));
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    setForm((current) => ({
+      ...current,
+      name,
+      slug,
+    }));
   };
+
+  // ─────────────────────────────────────────
+  // Shipping fields
+  // ─────────────────────────────────────────
 
   const updateShippingField = (field, value) => {
-    setForm(f => ({ ...f, shipping: { ...f.shipping, [field]: value } }));
+    setForm((current) => ({
+      ...current,
+
+      shipping: {
+        ...current.shipping,
+        [field]: value,
+      },
+    }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const measurementFields = ["weightKg", "lengthCm", "breadthCm", "heightCm"];
-    const hasAnyMeasurement = measurementFields.some(field => form.shipping[field] !== "");
-    const hasAllMeasurements = measurementFields.every(field => form.shipping[field] !== "");
-    const hasInvalidMeasurement = measurementFields.some((field) => {
-      const value = form.shipping[field];
-      return value !== "" && (!Number.isFinite(Number(value)) || Number(value) <= 0);
-    });
+  // ─────────────────────────────────────────
+  // Create / Update
+  // ─────────────────────────────────────────
 
-    if ((!editing || hasAnyMeasurement) && !hasAllMeasurements) {
-      toast.error("Enter weight and all three parcel dimensions, or leave them blank only for a legacy product.");
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (saving) {
       return;
     }
+
+    const measurementFields = [
+      "weightKg",
+      "lengthCm",
+      "breadthCm",
+      "heightCm",
+    ];
+
+    const hasAnyMeasurement =
+      measurementFields.some(
+        (field) => form.shipping[field] !== ""
+      );
+
+    const hasAllMeasurements =
+      measurementFields.every(
+        (field) => form.shipping[field] !== ""
+      );
+
+    const hasInvalidMeasurement =
+      measurementFields.some((field) => {
+        const value = form.shipping[field];
+
+        return (
+          value !== "" &&
+          (!Number.isFinite(Number(value)) ||
+            Number(value) <= 0)
+        );
+      });
+
+    // New product:
+    // all measurements required.
+    //
+    // Existing legacy product:
+    // either all filled or all empty.
+    if (
+      (!editing || hasAnyMeasurement) &&
+      !hasAllMeasurements
+    ) {
+      toast.error(
+        "Enter weight and all three parcel dimensions, or leave them blank only for a legacy product."
+      );
+
+      return;
+    }
+
     if (hasInvalidMeasurement) {
-      toast.error("Parcel weight and dimensions must be greater than zero.");
+      toast.error(
+        "Parcel weight and dimensions must be greater than zero."
+      );
+
       return;
     }
 
     try {
+      setSaving(true);
+
       const shipping = {
         sku: form.shipping.sku.trim(),
+
         ...Object.fromEntries(
           measurementFields
-            .filter(field => form.shipping[field] !== "")
-            .map(field => [field, Number(form.shipping[field])])
+            .filter(
+              (field) =>
+                form.shipping[field] !== ""
+            )
+            .map((field) => [
+              field,
+              Number(form.shipping[field]),
+            ])
         ),
       };
-      if (!shipping.sku) delete shipping.sku;
+
+      if (!shipping.sku) {
+        delete shipping.sku;
+      }
 
       const payload = {
         ...form,
-        images: form.images.split(",").map(i => i.trim()).filter(Boolean),
+
+        images: form.images
+          .split(",")
+          .map((image) => image.trim())
+          .filter(Boolean),
       };
-      if (Object.keys(shipping).length > 0) payload.shipping = shipping;
-      else delete payload.shipping;
+
+      if (Object.keys(shipping).length > 0) {
+        payload.shipping = shipping;
+      } else {
+        delete payload.shipping;
+      }
+
       if (editing) {
-        await axios.put(`${API}/admin/products/${editing}`, payload, { headers: authHeader() });
+        // ───────── UPDATE ─────────
+
+        await axios.put(
+          `${API}/admin/products/${editing}`,
+          payload,
+          {
+            headers: authHeader(),
+          }
+        );
+
         toast.success("Product updated!");
       } else {
-        await axios.post(`${API}/admin/products`, payload, { headers: authHeader() });
+        // ───────── CREATE ─────────
+
+        await axios.post(
+          `${API}/admin/products`,
+          payload,
+          {
+            headers: authHeader(),
+          }
+        );
+
         toast.success("Product created!");
       }
-      setForm(empty); setEditing(null); setShowForm(false); setSubcats([]); load();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Error saving product");
+
+      // Reset form
+      setForm(empty);
+
+      setEditing(null);
+
+      setShowForm(false);
+
+      setSubcats([]);
+
+      // Important:
+      // silent refresh after mutation.
+      // Full table shimmer will NOT appear.
+      await load();
+    } catch (error) {
+      console.error("Product save error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Error saving product"
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
+  // ─────────────────────────────────────────
+  // Delete
+  // ─────────────────────────────────────────
+
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this product?")) return;
-    await axios.delete(`${API}/admin/products/${id}`, { headers: authHeader() });
-    toast.success("Deleted!"); load();
+    if (deletingId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Delete this product?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(id);
+
+      await axios.delete(
+        `${API}/admin/products/${id}`,
+        {
+          headers: authHeader(),
+        }
+      );
+
+      toast.success("Deleted!");
+
+      // Silent refresh
+      await load();
+    } catch (error) {
+      console.error("Product delete error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Error deleting product"
+      );
+    } finally {
+      setDeletingId(null);
+    }
   };
 
-  const handleEdit = (p) => {
+  // ─────────────────────────────────────────
+  // Edit
+  // ─────────────────────────────────────────
+
+  const handleEdit = (product) => {
     setForm({
-      name:          p.name,
-      slug:          p.slug,
-      description:   p.description,
-      price:         p.price,
-      originalPrice: p.originalPrice || "",
-      category:      p.category,
-      subcategory:   p.subcategory || "",
-      stock:         p.stock,
-      images:        Array.isArray(p.images) ? p.images.join(", ") : "",
+      name: product.name,
+
+      slug: product.slug,
+
+      description: product.description,
+
+      price: product.price,
+
+      originalPrice:
+        product.originalPrice || "",
+
+      category: product.category,
+
+      subcategory:
+        product.subcategory || "",
+
+      stock: product.stock,
+
+      images: Array.isArray(product.images)
+        ? product.images.join(", ")
+        : "",
+
       shipping: {
-        sku:       p.shipping?.sku || "",
-        weightKg:  p.shipping?.weightKg ?? "",
-        lengthCm:  p.shipping?.lengthCm ?? "",
-        breadthCm: p.shipping?.breadthCm ?? "",
-        heightCm:  p.shipping?.heightCm ?? "",
+        sku:
+          product.shipping?.sku || "",
+
+        weightKg:
+          product.shipping?.weightKg ?? "",
+
+        lengthCm:
+          product.shipping?.lengthCm ?? "",
+
+        breadthCm:
+          product.shipping?.breadthCm ?? "",
+
+        heightCm:
+          product.shipping?.heightCm ?? "",
       },
-      isFeatured:    p.isFeatured,
-      isBestseller:  p.isBestseller,
-      isNew:         p.isNew,
-      isOnSale:      p.isOnSale,
+
+      isFeatured:
+        product.isFeatured,
+
+      isBestseller:
+        product.isBestseller,
+
+      isNew:
+        product.isNew,
+
+      isOnSale:
+        product.isOnSale,
     });
-    setSubcats(CATEGORIES[p.category] || []);
-    setEditing(p._id);
+
+    setSubcats(
+      CATEGORIES[product.category] || []
+    );
+
+    setEditing(product._id);
+
+    setShowForm(true);
+
+    // Form tak scroll karwa denge
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // ─────────────────────────────────────────
+  // Cancel edit
+  // ─────────────────────────────────────────
+
+  const cancelEdit = () => {
+    if (saving) {
+      return;
+    }
+
+    setForm(empty);
+
+    setEditing(null);
+
+    setShowForm(false);
+
+    setSubcats([]);
+  };
+
+  // ─────────────────────────────────────────
+  // Add Product button
+  // ─────────────────────────────────────────
+
+  const toggleAddProduct = () => {
+    if (saving) {
+      return;
+    }
+
+    // Agar form already open hai,
+    // to close kar do.
+    if (showForm) {
+      setForm(empty);
+
+      setEditing(null);
+
+      setSubcats([]);
+
+      setShowForm(false);
+
+      return;
+    }
+
+    // Fresh Create form
+    setForm(empty);
+
+    setEditing(null);
+
+    setSubcats([]);
+
     setShowForm(true);
   };
 
   return (
     <div className="products-page">
-      <div className="products-page-header" style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-        <h2 className="products-page-title">Products</h2>
+      {/* =====================================
+          PAGE HEADER
+          ===================================== */}
+
+      <div
+        className="products-page-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 24,
+        }}
+      >
+        <h2 className="products-page-title">
+          Products
+        </h2>
+
         <div className="products-page-actions">
-          <button onClick={() => { setForm(empty); setEditing(null); setSubcats([]); setShowForm(!showForm); }}
-            className="products-page-add-button" style={btnStyle}>
-            {showForm ? "Cancel" : "+ Add Product"}
+          <button
+            type="button"
+            onClick={toggleAddProduct}
+            disabled={saving}
+            className="products-page-add-button"
+            style={{
+              ...btnStyle,
+
+              opacity: saving ? 0.6 : 1,
+
+              cursor: saving
+                ? "not-allowed"
+                : "pointer",
+            }}
+          >
+            {showForm
+              ? "Cancel"
+              : "+ Add Product"}
           </button>
         </div>
       </div>
 
+      {/* =====================================
+          CREATE / UPDATE FORM
+          ===================================== */}
+
       {showForm && (
-        <form className="products-form" onSubmit={handleSubmit} style={{
-          background: "#fff", padding: 24, borderRadius: 12,
-          marginBottom: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16,
-        }}>
+        <form
+          className="products-form"
+          onSubmit={handleSubmit}
+          style={{
+            background: "#fff",
 
-          {/* Name — auto generates slug */}
+            padding: 24,
+
+            borderRadius: 12,
+
+            marginBottom: 24,
+
+            display: "grid",
+
+            gridTemplateColumns:
+              "1fr 1fr",
+
+            gap: 16,
+          }}
+        >
+          {/* =====================
+              NAME
+              ===================== */}
+
           <div className="products-form-field">
-            <label style={labelStyle}>Name *</label>
-            <input value={form.name} onChange={e => handleNameChange(e.target.value)}
-              style={inputStyle} placeholder="Product name" required />
+            <label style={labelStyle}>
+              Name *
+            </label>
+
+            <input
+              value={form.name}
+              onChange={(event) =>
+                handleNameChange(
+                  event.target.value
+                )
+              }
+              style={inputStyle}
+              placeholder="Product name"
+              required
+              disabled={saving}
+            />
           </div>
 
-          {/* Slug — auto filled, editable */}
+          {/* =====================
+              SLUG
+              ===================== */}
+
           <div className="products-form-field">
-            <label style={labelStyle}>Slug (auto-generated)</label>
-            <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
-              style={{ ...inputStyle, color: "#6b7280" }} placeholder="auto-generated-slug" />
+            <label style={labelStyle}>
+              Slug (auto-generated)
+            </label>
+
+            <input
+              value={form.slug}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  slug: event.target.value,
+                }))
+              }
+              style={{
+                ...inputStyle,
+                color: "#6b7280",
+              }}
+              placeholder="auto-generated-slug"
+              disabled={saving}
+            />
           </div>
 
-          {/* Category dropdown */}
+          {/* =====================
+              CATEGORY
+              ===================== */}
+
           <div className="products-form-field">
-            <label style={labelStyle}>Category *</label>
+            <label style={labelStyle}>
+              Category *
+            </label>
+
             <select
               value={form.category}
-              onChange={e => handleCategoryChange(e.target.value)}
-              style={inputStyle} required>
-              <option value="">— Select category —</option>
-              {Object.keys(CATEGORIES).map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+              onChange={(event) =>
+                handleCategoryChange(
+                  event.target.value
+                )
+              }
+              style={inputStyle}
+              required
+              disabled={saving}
+            >
+              <option value="">
+                — Select category —
+              </option>
+
+              {Object.keys(CATEGORIES).map(
+                (category) => (
+                  <option
+                    key={category}
+                    value={category}
+                  >
+                    {category}
+                  </option>
+                )
+              )}
             </select>
           </div>
 
-          {/* Subcategory — dependent on category */}
+          {/* =====================
+              SUBCATEGORY
+              ===================== */}
+
           <div className="products-form-field">
-            <label style={labelStyle}>Subcategory</label>
+            <label style={labelStyle}>
+              Subcategory
+            </label>
+
             {subcats.length > 0 ? (
               <select
                 value={form.subcategory}
-                onChange={e => setForm(f => ({ ...f, subcategory: e.target.value }))}
-                style={inputStyle}>
-                <option value="">— Select subcategory —</option>
-                {subcats.map(sub => (
-                  <option key={sub} value={sub}>{sub}</option>
-                ))}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+
+                    subcategory:
+                      event.target.value,
+                  }))
+                }
+                style={inputStyle}
+                disabled={saving}
+              >
+                <option value="">
+                  — Select subcategory —
+                </option>
+
+                {subcats.map(
+                  (subcategory) => (
+                    <option
+                      key={subcategory}
+                      value={subcategory}
+                    >
+                      {subcategory}
+                    </option>
+                  )
+                )}
               </select>
             ) : (
               <input
                 value={form.subcategory}
-                onChange={e => setForm(f => ({ ...f, subcategory: e.target.value }))}
-                style={{ ...inputStyle, color: "#9ca3af" }}
-                placeholder="No subcategories for this category" disabled={!form.category}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+
+                    subcategory:
+                      event.target.value,
+                  }))
+                }
+                style={{
+                  ...inputStyle,
+
+                  color: "#9ca3af",
+                }}
+                placeholder="No subcategories for this category"
+                disabled={
+                  !form.category ||
+                  saving
+                }
               />
             )}
           </div>
 
-          {/* Price fields */}
-          <div className="products-form-field">
-            <label style={labelStyle}>Price (₹) *</label>
-            <input type="number" value={form.price}
-              onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-              style={inputStyle} placeholder="e.g. 299" required />
-          </div>
+          {/* =====================
+              PRICE
+              ===================== */}
 
           <div className="products-form-field">
-            <label style={labelStyle}>Original Price (₹) <span style={{ color: "#9ca3af", fontWeight: 400 }}>(for strike-through)</span></label>
-            <input type="number" value={form.originalPrice}
-              onChange={e => setForm(f => ({ ...f, originalPrice: e.target.value }))}
-              style={inputStyle} placeholder="e.g. 399" />
+            <label style={labelStyle}>
+              Price (₹) *
+            </label>
+
+            <input
+              type="number"
+              value={form.price}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+
+                  price:
+                    event.target.value,
+                }))
+              }
+              style={inputStyle}
+              placeholder="e.g. 299"
+              required
+              min="0"
+              step="0.01"
+              disabled={saving}
+            />
           </div>
 
-          {/* Stock */}
+          {/* =====================
+              ORIGINAL PRICE
+              ===================== */}
+
           <div className="products-form-field">
-            <label style={labelStyle}>Stock *</label>
-            <input type="number" value={form.stock}
-              onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
-              style={inputStyle} placeholder="e.g. 10" required />
+            <label style={labelStyle}>
+              Original Price (₹){" "}
+              <span
+                style={{
+                  color: "#9ca3af",
+
+                  fontWeight: 400,
+                }}
+              >
+                (for strike-through)
+              </span>
+            </label>
+
+            <input
+              type="number"
+              value={form.originalPrice}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+
+                  originalPrice:
+                    event.target.value,
+                }))
+              }
+              style={inputStyle}
+              placeholder="e.g. 399"
+              min="0"
+              step="0.01"
+              disabled={saving}
+            />
           </div>
 
-          {/* Shipping parcel details */}
-          <fieldset className="products-shipping-fieldset products-form-wide" style={{
-            gridColumn: "span 2", margin: 0, padding: 16, borderRadius: 8,
-            border: "1px solid #ddd", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16,
-          }}>
-            <legend style={{ ...labelStyle, padding: "0 6px" }}>Shipping parcel data</legend>
-            <p className="products-shipping-help" style={{ gridColumn: "span 2", margin: 0, color: "#6b7280", fontSize: 12 }}>
-              Used for automatic Shiprocket fulfillment. Measurements are required for new products; legacy products can remain blank until their parcel data is known.
+          {/* =====================
+              STOCK
+              ===================== */}
+
+          <div className="products-form-field">
+            <label style={labelStyle}>
+              Stock *
+            </label>
+
+            <input
+              type="number"
+              value={form.stock}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+
+                  stock:
+                    event.target.value,
+                }))
+              }
+              style={inputStyle}
+              placeholder="e.g. 10"
+              required
+              min="0"
+              step="1"
+              disabled={saving}
+            />
+          </div>
+
+          {/* =====================================
+              SHIPPING
+              ===================================== */}
+
+          <fieldset
+            className="products-shipping-fieldset products-form-wide"
+            disabled={saving}
+            style={{
+              gridColumn: "span 2",
+
+              margin: 0,
+
+              padding: 16,
+
+              borderRadius: 8,
+
+              border: "1px solid #ddd",
+
+              display: "grid",
+
+              gridTemplateColumns:
+                "1fr 1fr",
+
+              gap: 16,
+            }}
+          >
+            <legend
+              style={{
+                ...labelStyle,
+
+                padding: "0 6px",
+              }}
+            >
+              Shipping parcel data
+            </legend>
+
+            <p
+              className="products-shipping-help"
+              style={{
+                gridColumn: "span 2",
+
+                margin: 0,
+
+                color: "#6b7280",
+
+                fontSize: 12,
+              }}
+            >
+              Used for automatic Shiprocket
+              fulfillment. Measurements are
+              required for new products; legacy
+              products can remain blank until
+              their parcel data is known.
             </p>
+
+            {/* SKU */}
+
             <div className="products-shipping-field">
-              <label style={labelStyle}>SKU <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span></label>
-              <input value={form.shipping.sku}
-                onChange={e => updateShippingField("sku", e.target.value)}
-                style={inputStyle} placeholder="e.g. PC-KEYRING-001" maxLength={100} />
+              <label style={labelStyle}>
+                SKU{" "}
+                <span
+                  style={{
+                    color: "#9ca3af",
+
+                    fontWeight: 400,
+                  }}
+                >
+                  (optional)
+                </span>
+              </label>
+
+              <input
+                value={form.shipping.sku}
+                onChange={(event) =>
+                  updateShippingField(
+                    "sku",
+
+                    event.target.value
+                  )
+                }
+                style={inputStyle}
+                placeholder="e.g. PC-KEYRING-001"
+                maxLength={100}
+              />
             </div>
+
+            {/* Weight */}
+
             <div className="products-shipping-field">
-              <label style={labelStyle}>Weight (kg){!editing && " *"}</label>
-              <input type="number" min="0.001" step="0.001" value={form.shipping.weightKg}
-                onChange={e => updateShippingField("weightKg", e.target.value)}
-                style={inputStyle} placeholder="e.g. 0.25" required={!editing} />
+              <label style={labelStyle}>
+                Weight (kg)
+                {!editing && " *"}
+              </label>
+
+              <input
+                type="number"
+                min="0.001"
+                step="0.001"
+                value={
+                  form.shipping.weightKg
+                }
+                onChange={(event) =>
+                  updateShippingField(
+                    "weightKg",
+
+                    event.target.value
+                  )
+                }
+                style={inputStyle}
+                placeholder="e.g. 0.25"
+                required={!editing}
+              />
             </div>
+
+            {/* Length */}
+
             <div className="products-shipping-field">
-              <label style={labelStyle}>Length (cm){!editing && " *"}</label>
-              <input type="number" min="0.1" step="0.1" value={form.shipping.lengthCm}
-                onChange={e => updateShippingField("lengthCm", e.target.value)}
-                style={inputStyle} placeholder="e.g. 15" required={!editing} />
+              <label style={labelStyle}>
+                Length (cm)
+                {!editing && " *"}
+              </label>
+
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={
+                  form.shipping.lengthCm
+                }
+                onChange={(event) =>
+                  updateShippingField(
+                    "lengthCm",
+
+                    event.target.value
+                  )
+                }
+                style={inputStyle}
+                placeholder="e.g. 15"
+                required={!editing}
+              />
             </div>
+
+            {/* Breadth */}
+
             <div className="products-shipping-field">
-              <label style={labelStyle}>Breadth (cm){!editing && " *"}</label>
-              <input type="number" min="0.1" step="0.1" value={form.shipping.breadthCm}
-                onChange={e => updateShippingField("breadthCm", e.target.value)}
-                style={inputStyle} placeholder="e.g. 10" required={!editing} />
+              <label style={labelStyle}>
+                Breadth (cm)
+                {!editing && " *"}
+              </label>
+
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={
+                  form.shipping.breadthCm
+                }
+                onChange={(event) =>
+                  updateShippingField(
+                    "breadthCm",
+
+                    event.target.value
+                  )
+                }
+                style={inputStyle}
+                placeholder="e.g. 10"
+                required={!editing}
+              />
             </div>
+
+            {/* Height */}
+
             <div className="products-shipping-field">
-              <label style={labelStyle}>Height (cm){!editing && " *"}</label>
-              <input type="number" min="0.1" step="0.1" value={form.shipping.heightCm}
-                onChange={e => updateShippingField("heightCm", e.target.value)}
-                style={inputStyle} placeholder="e.g. 5" required={!editing} />
+              <label style={labelStyle}>
+                Height (cm)
+                {!editing && " *"}
+              </label>
+
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={
+                  form.shipping.heightCm
+                }
+                onChange={(event) =>
+                  updateShippingField(
+                    "heightCm",
+
+                    event.target.value
+                  )
+                }
+                style={inputStyle}
+                placeholder="e.g. 5"
+                required={!editing}
+              />
             </div>
           </fieldset>
 
-          {/* Images */}
+          {/* =====================================
+              IMAGES
+              ===================================== */}
+
           <div className="products-form-field">
             <label style={labelStyle}>
-              Image URLs
-              <span style={{ fontWeight: 400, color: "#9ca3af" }}> (comma-separated)</span>
+              Image URLs{" "}
+              <span
+                style={{
+                  fontWeight: 400,
+
+                  color: "#9ca3af",
+                }}
+              >
+                (comma-separated)
+              </span>
             </label>
-            <input value={form.images}
-              onChange={e => setForm(f => ({ ...f, images: e.target.value }))}
-              style={inputStyle} placeholder="https://..., https://..." />
+
+            <input
+              value={form.images}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+
+                  images:
+                    event.target.value,
+                }))
+              }
+              style={inputStyle}
+              placeholder="https://..., https://..."
+              disabled={saving}
+            />
           </div>
 
-          {/* Description */}
-          <div className="products-form-wide" style={{ gridColumn: "span 2" }}>
-            <label style={labelStyle}>Description *</label>
-            <textarea value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              style={{ ...inputStyle, height: 80 }} required />
+          {/* =====================================
+              DESCRIPTION
+              ===================================== */}
+
+          <div
+            className="products-form-wide"
+            style={{
+              gridColumn: "span 2",
+            }}
+          >
+            <label style={labelStyle}>
+              Description *
+            </label>
+
+            <textarea
+              value={form.description}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+
+                  description:
+                    event.target.value,
+                }))
+              }
+              style={{
+                ...inputStyle,
+
+                height: 80,
+              }}
+              required
+              disabled={saving}
+            />
           </div>
 
-          {/* Flags */}
-          <div className="products-flags-section products-form-wide" style={{ gridColumn: "span 2" }}>
-            <label style={{ ...labelStyle, marginBottom: 10 }}>Product flags</label>
-            <div className="products-flag-options products-flags" style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          {/* =====================================
+              PRODUCT FLAGS
+              ===================================== */}
+
+          <div
+            className="products-flags-section products-form-wide"
+            style={{
+              gridColumn: "span 2",
+            }}
+          >
+            <label
+              style={{
+                ...labelStyle,
+
+                marginBottom: 10,
+              }}
+            >
+              Product flags
+            </label>
+
+            <div
+              className="products-flag-options products-flags"
+              style={{
+                display: "flex",
+
+                gap: 20,
+
+                flexWrap: "wrap",
+              }}
+            >
               {[
-                ["isFeatured",   "⭐ Featured"],
-                ["isBestseller", "🏆 Bestseller"],
-                ["isNew",        "🆕 New Arrival"],
-                ["isOnSale",     "🔖 On Sale"],
+                [
+                  "isFeatured",
+                  "⭐ Featured",
+                ],
+
+                [
+                  "isBestseller",
+                  "🏆 Bestseller",
+                ],
+
+                [
+                  "isNew",
+                  "🆕 New Arrival",
+                ],
+
+                [
+                  "isOnSale",
+                  "🔖 On Sale",
+                ],
               ].map(([key, label]) => (
-                <label key={key} style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  cursor: "pointer", fontSize: 13, fontWeight: 500,
-                  padding: "8px 14px",
-                  background: form[key] ? "#ede9fe" : "#f9fafb",
-                  border: `1px solid ${form[key] ? "#7c3aed" : "#e5e7eb"}`,
-                  borderRadius: 8, transition: "all 0.15s",
-                  color: form[key] ? "#7c3aed" : "#374151",
-                }}>
-                  <input type="checkbox" checked={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: e.target.checked }))}
-                    style={{ accentColor: "#7c3aed" }} />
+                <label
+                  key={key}
+                  style={{
+                    display: "flex",
+
+                    alignItems: "center",
+
+                    gap: 8,
+
+                    cursor: saving
+                      ? "not-allowed"
+                      : "pointer",
+
+                    fontSize: 13,
+
+                    fontWeight: 500,
+
+                    padding:
+                      "8px 14px",
+
+                    background: form[key]
+                      ? "#ede9fe"
+                      : "#f9fafb",
+
+                    border: `1px solid ${
+                      form[key]
+                        ? "#7c3aed"
+                        : "#e5e7eb"
+                    }`,
+
+                    borderRadius: 8,
+
+                    transition:
+                      "all 0.15s",
+
+                    color: form[key]
+                      ? "#7c3aed"
+                      : "#374151",
+
+                    opacity: saving
+                      ? 0.7
+                      : 1,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form[key]}
+                    disabled={saving}
+                    onChange={(event) =>
+                      setForm(
+                        (current) => ({
+                          ...current,
+
+                          [key]:
+                            event.target
+                              .checked,
+                        })
+                      )
+                    }
+                    style={{
+                      accentColor:
+                        "#7c3aed",
+                    }}
+                  />
+
                   {label}
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Preview images */}
+          {/* =====================================
+              IMAGE PREVIEW
+              ===================================== */}
+
           {form.images && (
-            <div className="products-image-preview products-form-wide" style={{ gridColumn: "span 2" }}>
-              <label style={labelStyle}>Image Preview</label>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {form.images.split(",").map(url => url.trim()).filter(Boolean).map((url, i) => (
-                  <img key={i} src={url} alt={`preview ${i+1}`}
-                    style={{ width: 80, height: 80, objectFit: "cover",
-                      borderRadius: 8, border: "1px solid #e5e7eb" }}
-                    onError={e => { e.currentTarget.style.display = "none"; }}/>
-                ))}
+            <div
+              className="products-image-preview products-form-wide"
+              style={{
+                gridColumn: "span 2",
+              }}
+            >
+              <label style={labelStyle}>
+                Image Preview
+              </label>
+
+              <div
+                style={{
+                  display: "flex",
+
+                  gap: 8,
+
+                  flexWrap: "wrap",
+                }}
+              >
+                {form.images
+                  .split(",")
+                  .map((url) => url.trim())
+                  .filter(Boolean)
+                  .map((url, index) => (
+                    <img
+                      key={`${url}-${index}`}
+                      src={url}
+                      alt={`preview ${
+                        index + 1
+                      }`}
+                      style={{
+                        width: 80,
+
+                        height: 80,
+
+                        objectFit:
+                          "cover",
+
+                        borderRadius: 8,
+
+                        border:
+                          "1px solid #e5e7eb",
+                      }}
+                      onError={(event) => {
+                        event.currentTarget.style.display =
+                          "none";
+                      }}
+                    />
+                  ))}
               </div>
             </div>
           )}
 
-          <div className="products-form-actions products-form-wide" style={{ gridColumn: "span 2" }}>
-            <button type="submit" style={btnStyle}>
-              {editing ? "Update Product" : "Create Product"}
+          {/* =====================================
+              CREATE / UPDATE BUTTON
+              ===================================== */}
+
+          <div
+            className="products-form-actions products-form-wide"
+            style={{
+              gridColumn: "span 2",
+            }}
+          >
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                ...btnStyle,
+
+                display: "inline-flex",
+
+                alignItems: "center",
+
+                justifyContent:
+                  "center",
+
+                gap: 8,
+
+                minWidth: 160,
+
+                opacity: saving
+                  ? 0.75
+                  : 1,
+
+                cursor: saving
+                  ? "not-allowed"
+                  : "pointer",
+              }}
+            >
+              {saving ? (
+                <>
+                  <Loader type="button" />
+
+                  {editing
+                    ? "Updating..."
+                    : "Creating..."}
+                </>
+              ) : editing ? (
+                "Update Product"
+              ) : (
+                "Create Product"
+              )}
             </button>
+
             {editing && (
-              <button type="button" onClick={() => { setForm(empty); setEditing(null); setShowForm(false); setSubcats([]); }}
-                style={{ ...btnStyle, background: "#6b7280", marginLeft: 10 }}>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={cancelEdit}
+                style={{
+                  ...btnStyle,
+
+                  background:
+                    "#6b7280",
+
+                  marginLeft: 10,
+
+                  opacity: saving
+                    ? 0.6
+                    : 1,
+
+                  cursor: saving
+                    ? "not-allowed"
+                    : "pointer",
+                }}
+              >
                 Cancel Edit
               </button>
             )}
@@ -521,126 +1365,748 @@ export default function Products() {
         </form>
       )}
 
-      {/* Products table */}
-      <div className="products-table-wrap desktop-only" style={{ background: "#fff", borderRadius: 12, overflow: "hidden" }}>
-        <table className="products-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ background: "#f3f4f6" }}>
-            <tr>{["Name","Category","Subcategory","Price","Stock","Flags","Actions"].map(h => (
-              <th key={h} style={thStyle}>{h}</th>
-            ))}</tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p._id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                <td style={tdStyle}>
-                  <div style={{ fontWeight: 600 }}>{p.name}</div>
-                  <div style={{ fontSize: 11, color: "#9ca3af" }}>{p.slug}</div>
-                </td>
-                <td style={tdStyle}>{p.category}</td>
-                <td style={tdStyle}>{p.subcategory || <span style={{ color: "#d1d5db" }}>—</span>}</td>
-                <td style={tdStyle}>
-                  <strong>₹{p.price}</strong>
-                  {p.originalPrice && (
-                    <div style={{ fontSize: 11, color: "#9ca3af", textDecoration: "line-through" }}>₹{p.originalPrice}</div>
-                  )}
-                </td>
-                <td style={tdStyle}>
-                  <span style={{
-                    padding: "3px 8px", borderRadius: 20, fontSize: 11,
-                    background: p.stock > 5 ? "#d1fae5" : p.stock > 0 ? "#fef3c7" : "#fee2e2",
-                    color: p.stock > 5 ? "#065f46" : p.stock > 0 ? "#92400e" : "#991b1b",
-                    fontWeight: 600,
-                  }}>
-                    {p.stock > 0 ? `${p.stock} left` : "Out of stock"}
-                  </span>
-                </td>
-                <td style={tdStyle}>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {p.isFeatured   && <span style={flagStyle("#7c3aed")}>⭐</span>}
-                    {p.isBestseller && <span style={flagStyle("#f59e0b")}>🏆</span>}
-                    {p.isNew        && <span style={flagStyle("#10b981")}>🆕</span>}
-                    {p.isOnSale     && <span style={flagStyle("#ef4444")}>🔖</span>}
+      {/* =====================================
+          INITIAL PRODUCTS LOADING
+          ===================================== */}
+
+      {loading ? (
+        <Loader
+          type="table"
+          columns={7}
+          rows={6}
+        />
+      ) : (
+        <>
+          {/* =================================
+              DESKTOP PRODUCTS TABLE
+              ================================= */}
+
+          <div
+            className="products-table-wrap desktop-only"
+            style={{
+              background: "#fff",
+
+              borderRadius: 12,
+
+              overflow: "hidden",
+            }}
+          >
+            <table
+              className="products-table"
+              style={{
+                width: "100%",
+
+                borderCollapse:
+                  "collapse",
+              }}
+            >
+              <thead
+                style={{
+                  background:
+                    "#f3f4f6",
+                }}
+              >
+                <tr>
+                  {[
+                    "Name",
+                    "Category",
+                    "Subcategory",
+                    "Price",
+                    "Stock",
+                    "Flags",
+                    "Actions",
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      style={thStyle}
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {products.map(
+                  (product) => (
+                    <tr
+                      key={product._id}
+                      style={{
+                        borderBottom:
+                          "1px solid #f3f4f6",
+                      }}
+                    >
+                      {/* NAME */}
+
+                      <td style={tdStyle}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                          }}
+                        >
+                          {product.name}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 11,
+
+                            color:
+                              "#9ca3af",
+                          }}
+                        >
+                          {product.slug}
+                        </div>
+                      </td>
+
+                      {/* CATEGORY */}
+
+                      <td style={tdStyle}>
+                        {
+                          product.category
+                        }
+                      </td>
+
+                      {/* SUBCATEGORY */}
+
+                      <td style={tdStyle}>
+                        {product.subcategory || (
+                          <span
+                            style={{
+                              color:
+                                "#d1d5db",
+                            }}
+                          >
+                            —
+                          </span>
+                        )}
+                      </td>
+
+                      {/* PRICE */}
+
+                      <td style={tdStyle}>
+                        <strong>
+                          ₹{product.price}
+                        </strong>
+
+                        {product.originalPrice && (
+                          <div
+                            style={{
+                              fontSize: 11,
+
+                              color:
+                                "#9ca3af",
+
+                              textDecoration:
+                                "line-through",
+                            }}
+                          >
+                            ₹
+                            {
+                              product.originalPrice
+                            }
+                          </div>
+                        )}
+                      </td>
+
+                      {/* STOCK */}
+
+                      <td style={tdStyle}>
+                        <span
+                          style={{
+                            padding:
+                              "3px 8px",
+
+                            borderRadius: 20,
+
+                            fontSize: 11,
+
+                            background:
+                              product.stock >
+                              5
+                                ? "#d1fae5"
+                                : product.stock >
+                                    0
+                                  ? "#fef3c7"
+                                  : "#fee2e2",
+
+                            color:
+                              product.stock >
+                              5
+                                ? "#065f46"
+                                : product.stock >
+                                    0
+                                  ? "#92400e"
+                                  : "#991b1b",
+
+                            fontWeight: 600,
+                          }}
+                        >
+                          {product.stock > 0
+                            ? `${product.stock} left`
+                            : "Out of stock"}
+                        </span>
+                      </td>
+
+                      {/* FLAGS */}
+
+                      <td style={tdStyle}>
+                        <div
+                          style={{
+                            display: "flex",
+
+                            gap: 4,
+
+                            flexWrap:
+                              "wrap",
+                          }}
+                        >
+                          {product.isFeatured && (
+                            <span
+                              style={flagStyle(
+                                "#7c3aed"
+                              )}
+                              title="Featured"
+                            >
+                              ⭐
+                            </span>
+                          )}
+
+                          {product.isBestseller && (
+                            <span
+                              style={flagStyle(
+                                "#f59e0b"
+                              )}
+                              title="Bestseller"
+                            >
+                              🏆
+                            </span>
+                          )}
+
+                          {product.isNew && (
+                            <span
+                              style={flagStyle(
+                                "#10b981"
+                              )}
+                              title="New arrival"
+                            >
+                              🆕
+                            </span>
+                          )}
+
+                          {product.isOnSale && (
+                            <span
+                              style={flagStyle(
+                                "#ef4444"
+                              )}
+                              title="On sale"
+                            >
+                              🔖
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* ACTIONS */}
+
+                      <td style={tdStyle}>
+                        <div
+                          style={{
+                            display: "flex",
+
+                            gap: 6,
+
+                            alignItems:
+                              "center",
+
+                            flexWrap:
+                              "wrap",
+                          }}
+                        >
+                          {/* EDIT */}
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleEdit(
+                                product
+                              )
+                            }
+                            disabled={
+                              deletingId ===
+                                product._id ||
+                              saving
+                            }
+                            style={{
+                              ...smallBtn,
+
+                              background:
+                                "#0ea5e9",
+
+                              opacity:
+                                deletingId ===
+                                  product._id ||
+                                saving
+                                  ? 0.6
+                                  : 1,
+
+                              cursor:
+                                deletingId ===
+                                  product._id ||
+                                saving
+                                  ? "not-allowed"
+                                  : "pointer",
+                            }}
+                          >
+                            Edit
+                          </button>
+
+                          {/* DELETE */}
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDelete(
+                                product._id
+                              )
+                            }
+                            disabled={
+                              deletingId !==
+                              null
+                            }
+                            style={{
+                              ...smallBtn,
+
+                              background:
+                                "#ef4444",
+
+                              display:
+                                "inline-flex",
+
+                              alignItems:
+                                "center",
+
+                              justifyContent:
+                                "center",
+
+                              gap: 6,
+
+                              minWidth: 76,
+
+                              opacity:
+                                deletingId ===
+                                product._id
+                                  ? 0.75
+                                  : deletingId
+                                    ? 0.5
+                                    : 1,
+
+                              cursor:
+                                deletingId
+                                  ? "not-allowed"
+                                  : "pointer",
+                            }}
+                          >
+                            {deletingId ===
+                            product._id ? (
+                              <>
+                                <Loader type="button" />
+
+                                Deleting...
+                              </>
+                            ) : (
+                              "Delete"
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )}
+
+                {products.length ===
+                  0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{
+                        padding: 32,
+
+                        textAlign:
+                          "center",
+
+                        color:
+                          "#9ca3af",
+                      }}
+                    >
+                      No products yet —
+                      add your first
+                      product!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* =================================
+              MOBILE PRODUCT LIST
+              ================================= */}
+
+          <div
+            className="products-mobile-list mobile-only"
+            aria-label="Products"
+          >
+            {products.map(
+              (product) => (
+                <article
+                  className="product-card"
+                  key={product._id}
+                >
+                  {/* TOP */}
+
+                  <div className="product-card-header product-card__top">
+                    <div className="product-card-title-group">
+                      <h3 className="product-card-title product-card__name">
+                        {product.name}
+                      </h3>
+
+                      {product.slug && (
+                        <p className="product-card-slug product-card__slug">
+                          {
+                            product.slug
+                          }
+                        </p>
+                      )}
+                    </div>
+
+                    <span
+                      className="product-card-stock-badge product-card__stock"
+                      style={{
+                        padding:
+                          "3px 8px",
+
+                        borderRadius: 20,
+
+                        fontSize: 11,
+
+                        background:
+                          product.stock >
+                          5
+                            ? "#d1fae5"
+                            : product.stock >
+                                0
+                              ? "#fef3c7"
+                              : "#fee2e2",
+
+                        color:
+                          product.stock >
+                          5
+                            ? "#065f46"
+                            : product.stock >
+                                0
+                              ? "#92400e"
+                              : "#991b1b",
+
+                        fontWeight: 600,
+                      }}
+                    >
+                      {product.stock > 0
+                        ? `${product.stock} left`
+                        : "Out of stock"}
+                    </span>
                   </div>
-                </td>
-                <td style={tdStyle}>
-                  <button onClick={() => handleEdit(p)} style={{ ...smallBtn, background: "#0ea5e9" }}>Edit</button>
-                  <button onClick={() => handleDelete(p._id)} style={{ ...smallBtn, background: "#ef4444" }}>Delete</button>
-                </td>
-              </tr>
-            ))}
-            {products.length === 0 && (
-              <tr><td colSpan={7} style={{ padding: 32, textAlign: "center", color: "#9ca3af" }}>
-                No products yet — add your first product!
-              </td></tr>
+
+                  {/* PRICE + CATEGORY */}
+
+                  <div className="product-card-details product-card__price-row">
+                    <div className="product-card-price product-card__price">
+                      <strong>
+                        ₹{product.price}
+                      </strong>
+
+                      {product.originalPrice && (
+                        <span className="product-card-original-price product-card__original-price">
+                          ₹
+                          {
+                            product.originalPrice
+                          }
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="product-card-category product-card__meta">
+                      <span>
+                        {
+                          product.category
+                        }
+                      </span>
+
+                      {product.subcategory && (
+                        <span className="product-card-subcategory">
+                          {
+                            product.subcategory
+                          }
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* FLAGS */}
+
+                  <div
+                    className="product-card-flags product-card__flags"
+                    aria-label="Product flags"
+                  >
+                    {product.isFeatured && (
+                      <span
+                        style={flagStyle(
+                          "#7c3aed"
+                        )}
+                        title="Featured"
+                        aria-label="Featured"
+                      >
+                        ⭐
+                      </span>
+                    )}
+
+                    {product.isBestseller && (
+                      <span
+                        style={flagStyle(
+                          "#f59e0b"
+                        )}
+                        title="Bestseller"
+                        aria-label="Bestseller"
+                      >
+                        🏆
+                      </span>
+                    )}
+
+                    {product.isNew && (
+                      <span
+                        style={flagStyle(
+                          "#10b981"
+                        )}
+                        title="New arrival"
+                        aria-label="New arrival"
+                      >
+                        🆕
+                      </span>
+                    )}
+
+                    {product.isOnSale && (
+                      <span
+                        style={flagStyle(
+                          "#ef4444"
+                        )}
+                        title="On sale"
+                        aria-label="On sale"
+                      >
+                        🔖
+                      </span>
+                    )}
+                  </div>
+
+                  {/* ACTIONS */}
+
+                  <div className="product-card-actions product-card__actions">
+                    {/* EDIT */}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleEdit(
+                          product
+                        )
+                      }
+                      disabled={
+                        deletingId ===
+                          product._id ||
+                        saving
+                      }
+                      className="product-card-edit-button"
+                      style={{
+                        ...smallBtn,
+
+                        background:
+                          "#0ea5e9",
+
+                        opacity:
+                          deletingId ===
+                            product._id ||
+                          saving
+                            ? 0.6
+                            : 1,
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    {/* DELETE */}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDelete(
+                          product._id
+                        )
+                      }
+                      disabled={
+                        deletingId !==
+                        null
+                      }
+                      className="product-card-delete-button"
+                      style={{
+                        ...smallBtn,
+
+                        background:
+                          "#ef4444",
+
+                        display:
+                          "inline-flex",
+
+                        alignItems:
+                          "center",
+
+                        justifyContent:
+                          "center",
+
+                        gap: 6,
+
+                        opacity:
+                          deletingId ===
+                          product._id
+                            ? 0.75
+                            : deletingId
+                              ? 0.5
+                              : 1,
+
+                        cursor:
+                          deletingId
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {deletingId ===
+                      product._id ? (
+                        <>
+                          <Loader type="button" />
+
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete"
+                      )}
+                    </button>
+                  </div>
+                </article>
+              )
             )}
-          </tbody>
-        </table>
-      </div>
 
-      <div className="products-mobile-list mobile-only" aria-label="Products">
-        {products.map(p => (
-          <article className="product-card" key={p._id}>
-            <div className="product-card-header product-card__top">
-              <div className="product-card-title-group">
-                <h3 className="product-card-title product-card__name">{p.name}</h3>
-                {p.slug && <p className="product-card-slug product-card__slug">{p.slug}</p>}
+            {products.length ===
+              0 && (
+              <div className="products-mobile-empty">
+                No products yet — add
+                your first product!
               </div>
-              <span className="product-card-stock-badge product-card__stock" style={{
-                padding: "3px 8px", borderRadius: 20, fontSize: 11,
-                background: p.stock > 5 ? "#d1fae5" : p.stock > 0 ? "#fef3c7" : "#fee2e2",
-                color: p.stock > 5 ? "#065f46" : p.stock > 0 ? "#92400e" : "#991b1b",
-                fontWeight: 600,
-              }}>
-                {p.stock > 0 ? `${p.stock} left` : "Out of stock"}
-              </span>
-            </div>
-
-            <div className="product-card-details product-card__price-row">
-              <div className="product-card-price product-card__price">
-                <strong>₹{p.price}</strong>
-                {p.originalPrice && <span className="product-card-original-price product-card__original-price">₹{p.originalPrice}</span>}
-              </div>
-              <div className="product-card-category product-card__meta">
-                <span>{p.category}</span>
-                {p.subcategory && <span className="product-card-subcategory">{p.subcategory}</span>}
-              </div>
-            </div>
-
-            <div className="product-card-flags product-card__flags" aria-label="Product flags">
-              {p.isFeatured && <span style={flagStyle("#7c3aed")} title="Featured" aria-label="Featured">⭐</span>}
-              {p.isBestseller && <span style={flagStyle("#f59e0b")} title="Bestseller" aria-label="Bestseller">🏆</span>}
-              {p.isNew && <span style={flagStyle("#10b981")} title="New arrival" aria-label="New arrival">🆕</span>}
-              {p.isOnSale && <span style={flagStyle("#ef4444")} title="On sale" aria-label="On sale">🔖</span>}
-            </div>
-
-            <div className="product-card-actions product-card__actions">
-              <button type="button" onClick={() => handleEdit(p)} className="product-card-edit-button"
-                style={{ ...smallBtn, background: "#0ea5e9" }}>
-                Edit
-              </button>
-              <button type="button" onClick={() => handleDelete(p._id)} className="product-card-delete-button"
-                style={{ ...smallBtn, background: "#ef4444" }}>
-                Delete
-              </button>
-            </div>
-          </article>
-        ))}
-        {products.length === 0 && (
-          <div className="products-mobile-empty">No products yet — add your first product!</div>
-        )}
-      </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
+// ─────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────
+
 const flagStyle = (color) => ({
-  padding: "2px 6px", borderRadius: 6, fontSize: 12,
-  background: `${color}15`, border: `1px solid ${color}30`,
+  padding: "2px 6px",
+
+  borderRadius: 6,
+
+  fontSize: 12,
+
+  background: `${color}15`,
+
+  border: `1px solid ${color}30`,
 });
 
-const inputStyle  = { width: "100%", padding: 10, borderRadius: 8, border: "1px solid #ddd", fontSize: 14, boxSizing: "border-box" };
-const labelStyle  = { display: "block", marginBottom: 4, fontSize: 13, color: "#374151", fontWeight: 600 };
-const btnStyle    = { padding: "10px 20px", background: "#7c3aed", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14 };
-const smallBtn    = { padding: "6px 12px", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 13, marginRight: 6 };
-const thStyle     = { padding: "12px 16px", textAlign: "left", fontSize: 13, fontWeight: 600, color: "#374151" };
-const tdStyle     = { padding: "12px 16px", fontSize: 14, color: "#374151" };
+const inputStyle = {
+  width: "100%",
+
+  padding: 10,
+
+  borderRadius: 8,
+
+  border: "1px solid #ddd",
+
+  fontSize: 14,
+
+  boxSizing: "border-box",
+};
+
+const labelStyle = {
+  display: "block",
+
+  marginBottom: 4,
+
+  fontSize: 13,
+
+  color: "#374151",
+
+  fontWeight: 600,
+};
+
+const btnStyle = {
+  padding: "10px 20px",
+
+  background: "#7c3aed",
+
+  color: "#fff",
+
+  border: "none",
+
+  borderRadius: 8,
+
+  cursor: "pointer",
+
+  fontSize: 14,
+};
+
+const smallBtn = {
+  padding: "6px 12px",
+
+  color: "#fff",
+
+  border: "none",
+
+  borderRadius: 6,
+
+  cursor: "pointer",
+
+  fontSize: 13,
+
+  marginRight: 6,
+};
+
+const thStyle = {
+  padding: "12px 16px",
+
+  textAlign: "left",
+
+  fontSize: 13,
+
+  fontWeight: 600,
+
+  color: "#374151",
+};
+
+const tdStyle = {
+  padding: "12px 16px",
+
+  fontSize: 14,
+
+  color: "#374151",
+};
