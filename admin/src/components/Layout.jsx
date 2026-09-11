@@ -14,7 +14,12 @@ export default function Layout() {
   const closeMobileMenu = (restoreFocus = false) => {
     setIsMobileMenuOpen(false);
     if (restoreFocus) {
-      window.requestAnimationFrame(() => mobileMenuTriggerRef.current?.focus());
+      const restoreTriggerFocus = () => mobileMenuTriggerRef.current?.focus();
+      if (typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(restoreTriggerFocus);
+      } else {
+        window.setTimeout(restoreTriggerFocus, 0);
+      }
     }
   };
   const toggleMobileMenu = (event) => {
